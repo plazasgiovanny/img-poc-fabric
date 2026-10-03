@@ -25,12 +25,15 @@ Ingreso Mínimo Garantizado (IMG), SDIS Bogotá* (documento `Caso_Analisis_IMG_A
 ## Estado
 | Componente | Estado |
 |---|---|
-| `img_lib` (normalizar, validar, params, huella, bitácora, MDM, ciclo) | Hecho, con tests locales |
+| `img_lib` (normalizar, validar, params, huella, bitácora, MDM, cruces, liquidación, controles, DAG, métricas) | Hecho, con pruebas locales |
+| Cadena lógica completa sobre datos sintéticos (`tests/test_e2e.py`) | Hecho: error <1 % a 500 y a 5.000 registros |
 | Generador sintético | Hecho (esquema **provisional**, PENDIENTE G2) |
 | DDL `ctl/param` + parámetros ilustrativos | Hecho |
-| Cuadernos Etapa 1 (`nb_e1_bronce/plata/mdm/oro`) | Escritos, **sin ejecutar en Fabric** (spike día 1) |
-| Cuadernos Etapa 2 (cruces), Etapa 3 (`nb_00`–`nb_07`), controles, orquestadores `runMultiple` | Pendiente |
-| Pipeline `pl_img_ciclo` con 4 aprobaciones | Pendiente (se arma en el portal y se exporta) |
+| Cuadernos (Etapas 1 a 3, controles, orquestadores `runMultiple`) | Escritos y con sintaxis verificada, **sin ejecutar en Fabric** (spike día 1) |
+| Pipeline `pl_img_ciclo` con 4 aprobaciones | Guía en `pipelines/README.md`; se arma en el portal y se exporta |
+
+Desviaciones deliberadas respecto del documento (ver `docs/PENDIENTES.md`): un solo workspace con 4 lakehouses,
+un cuaderno de Plata para ambas fuentes (la PoC tiene dos), publicación en OneLake en vez de Azure Storage.
 
 ## Desarrollo local
 ```bash

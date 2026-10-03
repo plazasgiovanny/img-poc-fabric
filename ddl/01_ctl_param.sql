@@ -6,8 +6,8 @@ CREATE SCHEMA IF NOT EXISTS ctl;
 CREATE SCHEMA IF NOT EXISTS param;
 
 CREATE TABLE IF NOT EXISTS ctl.ciclo (
-  id_ciclo STRING, fecha_corte DATE, version_fuente_poblacional STRING, version_fuente_validacion STRING,
-  creado_en TIMESTAMP
+  id_ciclo STRING, corte STRING, fecha_corte DATE, version_fuente_poblacional STRING, version_fuente_validacion STRING,
+  creado_en STRING
 ) USING DELTA;
 
 -- Instrumento A (Tabla 2, 11 campos + observaciones) + trazabilidad (Tabla 7)
@@ -21,12 +21,12 @@ CREATE TABLE IF NOT EXISTS ctl.bitacora_ejecucion (
 ) USING DELTA;
 
 CREATE TABLE IF NOT EXISTS ctl.aprobaciones (
-  id_ciclo STRING, control STRING, rol_responsable STRING, solicitado_en TIMESTAMP, decidido_en TIMESTAMP,
+  id_ciclo STRING, control STRING, rol_responsable STRING, solicitado_en STRING, decidido_en STRING,
   decision STRING, aprobador STRING, comentario STRING, mecanismo STRING, pipeline_run_id STRING
 ) USING DELTA;
 
 CREATE TABLE IF NOT EXISTS ctl.metricas_exp (
-  id_ciclo STRING, id_ejecucion STRING, metrica STRING, valor DOUBLE, detalle STRING, medido_en TIMESTAMP
+  id_ciclo STRING, id_ejecucion STRING, metrica STRING, valor DOUBLE, detalle STRING, medido_en STRING
 ) USING DELTA;
 
 -- Parámetros de la Etapa 3 (§18): vigencia, responsable y documento soporte en cada fila.

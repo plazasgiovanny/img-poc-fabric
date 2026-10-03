@@ -3,16 +3,16 @@
 
 # %% Parámetros
 id_ciclo = "2026-09"
-corte = 1
 id_ejecucion = None
 pipeline_run_id = None
 VERSION_CUADERNO = "dev"
 
 # %% Ejecución
-from img_lib.ciclo import cerrar, iniciar
+from img_lib.ciclo import cerrar, iniciar, leer_ciclo
 
 ID_EJEC, T0 = iniciar(spark, id_ciclo, id_ejecucion)  # noqa: F821
-filtro = f"id_ciclo = '{id_ciclo}' AND fecha_corte = 'corte{corte}'"
+corte = leer_ciclo(spark, id_ciclo)["corte"]  # noqa: F821
+filtro = f"id_ciclo = '{id_ciclo}' AND corte = '{corte}'"
 xref = spark.table("lh_plata.mdm.xref").where(filtro)  # noqa: F821
 persona = spark.table("lh_plata.mdm.persona").where(filtro).select("id_persona", "id_hogar")  # noqa: F821
 n = 0

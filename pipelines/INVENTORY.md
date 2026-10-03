@@ -52,6 +52,9 @@ Cómo espera Fabric los parámetros de una actividad de cuaderno (`TridentNotebo
 ## Marcadores de las plantillas
 `{{WORKSPACE_ID}}`, `{{APPROVERS}}`, `{{TEAMS_CHAT_ID}}`, `{{TEAMS_CONNECTION_ID}}` y `{{NOTEBOOK_ID:<nombre del cuaderno>}}`.
 
+## Pendiente
+Automatizar la creación e importación de pipelines y cuadernos por API para quitar los pasos manuales: [issue #8](https://github.com/plazasgiovanny/img-poc-fabric/issues/8).
+
 ## Reglas
 - Nada de GUIDs, correos ni ids de chat en `templates/` ni en `local.example.json`: lo comprueba `tests/test_pipelines.py`.
 - Cada pipeline nuevo se agrega a esta tabla en el mismo PR que su plantilla.

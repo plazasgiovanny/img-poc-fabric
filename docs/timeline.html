@@ -60,9 +60,11 @@
 const REPO = "https://github.com/plazasgiovanny/img-poc-fabric";
 
 const EVENTS = [
+  { date:"2026-10-03", status:"done", title:"G10 cerrado: la aprobación humana funciona (plan A)",
+    detail:"Aprobada, rechazada y vencida probadas en Fabric y distinguibles por el mensaje; la plantilla JSON se importó sin cambios. La salida no trae quién aprobó: se registra el aprobador designado. La actividad está en vista previa; el plan B queda de respaldo.", link:"../pipelines/INVENTORY.md" },
   { date:"2026-10-03", status:"done", title:"Verificación del entorno: 13 de 13 pruebas OK en Fabric",
     detail:"nb_env_check pasó completo en el trial: nombres de tabla de tres partes, auditoría con userMetadata, time travel, runMultiple con dependencias y notebookutils.fs. Corrobora el arreglo de la bitácora (PR #5)." },
-  { date:"2026-10-03", status:"doing", title:"Prueba de la aprobación humana (G10) e inventario de pipelines",
+  { date:"2026-10-03", status:"done", title:"Prueba de la aprobación humana (G10) e inventario de pipelines",
     detail:"La actividad Approval existe, espera la decisión y un rechazo la hace fallar con un mensaje legible. Los pipelines se versionan ahora como plantillas JSON sin IDs de entorno.", link:"../pipelines/INVENTORY.md" },
   { date:"2026-10-03", status:"done", title:"PR #3 y #4 mergeados tras revisión independiente",
     detail:"Tres revisores en paralelo (equivalencia de comportamiento, consistencia de cuadernos/DDL, integridad de docs y HTML) dieron OK con observaciones; las referencias desactualizadas se corrigieron antes del merge.", pr:4, commit:"edac5ea" },

@@ -60,6 +60,10 @@
 const REPO = "https://github.com/plazasgiovanny/img-poc-fabric";
 
 const EVENTS = [
+  { date:"2026-10-03", status:"done", title:"PR #3 y #4 mergeados tras revisión independiente",
+    detail:"Tres revisores en paralelo (equivalencia de comportamiento, consistencia de cuadernos/DDL, integridad de docs y HTML) dieron OK con observaciones; las referencias desactualizadas se corrigieron antes del merge.", pr:4, commit:"edac5ea" },
+  { date:"2026-10-03", status:"doing", title:"Arreglo de la bitácora (run_log.record)",
+    detail:"Los revisores señalaron que record() crea el DataFrame sin esquema y podía fallar en la primera ejecución en Fabric. Corregido con pruebas; pendiente de revisión en el PR #5.", pr:5 },
   { date:"2026-10-03", status:"done", title:"Código, archivos y datos en inglés",
     detail:"Barrido de todo el repo: archivos, módulos, funciones, variables, tablas, columnas y valores en inglés; solo comentarios y documentación siguen en español. Glosario con la correspondencia al documento en docs/NAMING.md.", link:"NAMING.md" },
   { date:"2026-10-03", status:"done", title:"PR #1 mergeado a main",

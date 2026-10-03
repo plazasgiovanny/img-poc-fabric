@@ -1,4 +1,5 @@
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -65,3 +66,78 @@ def test_pending_request_does_not_approve_and_reopens():
     new = controls.approval_row(cycle_id="2026-09", control="C3", decision="PENDING", approver=None,
                                       mechanism="request", requested_at="t99", decided_at=None)
     assert not controls.all_approved(base + [new], "2026-09")  # una nueva solicitud reabre el control
+
+
+# ---- escritura Delta con Spark simulado: cubre cycle.write y run_log.record sin necesitar Fabric ----
+class _FakeWriter:
+    def __init__(self, sink):
+        self.sink = sink
+
+    def format(self, f):
+        self.sink["format"] = f
+        return self
+
+    def mode(self, m):
+        self.sink["mode"] = m
+        return self
+
+    def saveAsTable(self, t):  # noqa: N802 - API de Spark
+        self.sink["table"] = t
+
+
+class _FakeDF:
+    def __init__(self, sink, rows, schema):
+        sink["rows"], sink["schema"] = rows, schema
+        self.write = _FakeWriter(sink)
+
+
+class _FakeSpark:
+    def __init__(self, existing=None):
+        self.sink, self.existing = {}, existing or {}
+        self.catalog = types.SimpleNamespace(tableExists=lambda t: t in self.existing)
+
+    def table(self, t):
+        return types.SimpleNamespace(schema=self.existing[t])
+
+    def createDataFrame(self, rows, schema=None):  # noqa: N802 - API de Spark
+        return _FakeDF(self.sink, rows, schema)
+
+
+def test_write_infers_schema_when_table_is_missing():
+    from img_lib.cycle import ddl_types, write
+    spark, rows = _FakeSpark(), [{"a": None, "b": 1}]
+    assert write(spark, rows, "lh_x.s.t") == 1
+    assert spark.sink["schema"] == ddl_types(rows) and spark.sink["table"] == "lh_x.s.t" and spark.sink["mode"] == "append"
+
+
+def test_write_uses_the_existing_table_schema():
+    """Una columna todo None conserva el tipo declarado de la tabla (p. ej. BIGINT), no cae a string."""
+    from img_lib.cycle import write
+    esquema = object()
+    spark = _FakeSpark({"lh_x.s.t": esquema})
+    write(spark, [{"a": None, "b": 1}], "lh_x.s.t")
+    assert spark.sink["schema"] is esquema
+
+
+def test_write_ignores_empty_rows():
+    from img_lib.cycle import write
+    spark = _FakeSpark()
+    assert write(spark, [], "lh_x.s.t") == 0 and spark.sink == {}
+
+
+def test_run_log_record_writes_none_columns_with_the_table_schema():
+    from img_lib import run_log
+    esquema = object()
+    spark = _FakeSpark({run_log.RUN_LOG_TABLE: esquema})
+    row = run_log.event(cycle_id="c", execution_id="e", notebook="n", notebook_version="v",
+                        process_stage="s", trace_event="t")
+    assert row["data_source"] is None and row["notes"] is None      # el caso que antes rompía la inferencia de esquema
+    run_log.record(spark, row)
+    assert spark.sink["table"] == run_log.RUN_LOG_TABLE and spark.sink["schema"] is esquema and spark.sink["rows"] == [row]
+
+
+def test_run_log_record_accepts_another_table():
+    from img_lib import run_log
+    spark = _FakeSpark()
+    run_log.record(spark, {"x": 1}, "lh_control.ctl.env_check_run_log")
+    assert spark.sink["table"] == "lh_control.ctl.env_check_run_log"

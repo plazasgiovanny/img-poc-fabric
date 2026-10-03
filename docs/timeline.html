@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historial PoC IMG</title>
+<style>
+  :root{
+    --bg:#fafafa; --fg:#1b1f23; --muted:#6a737d; --line:#e1e4e8;
+    --done:#1a7f4b; --doing:#b7791f; --todo:#9aa3ab; --accent:#0b6e7a;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#111418; --fg:#e6e9ec; --muted:#8b949e; --line:#262c33;
+    --done:#4cc38a; --doing:#e3b341; --todo:#6b747d; --accent:#55c3d0;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+       padding:32px 16px 64px}
+  main{max-width:720px;margin:0 auto}
+  h1{font-size:1.4rem;margin:0 0 4px;font-weight:600}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .summary{display:flex;gap:20px;flex-wrap:wrap;padding:12px 0;margin-bottom:8px;border-block:1px solid var(--line);
+           font:13px ui-monospace,Consolas,monospace;color:var(--muted)}
+  .summary b{color:var(--fg);font-weight:600}
+  h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:28px 0 10px;font-weight:600}
+  ol{list-style:none;margin:0;padding:0;border-left:1px solid var(--line)}
+  li{position:relative;padding:0 0 18px 20px}
+  li::before{content:"";position:absolute;left:-5px;top:7px;width:9px;height:9px;border-radius:50%;
+             background:var(--todo);outline:3px solid var(--bg)}
+  li.done::before{background:var(--done)}
+  li.doing::before{background:var(--doing)}
+  .date{font:12px ui-monospace,Consolas,monospace;color:var(--muted)}
+  .title{font-weight:600}
+  .detail{color:var(--muted);margin:2px 0 0}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;font:12px ui-monospace,Consolas,monospace}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tag{color:var(--muted)}
+  .empty{color:var(--muted)}
+  @media (prefers-reduced-motion:no-preference){li{transition:opacity .2s}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Historial PoC IMG en Fabric</h1>
+  <p class="sub">Avances del proyecto, del más reciente al más antiguo. Repositorio: <a id="repo" href="#" target="_blank" rel="noopener"></a></p>
+  <div class="summary" id="summary"></div>
+
+  <h2>Próximo</h2>
+  <ol id="next_up"></ol>
+
+  <h2>Avances</h2>
+  <ol id="progress"></ol>
+</main>
+
+<script>
+/* Para registrar un avance: agregar un objeto al inicio de EVENTS (los más recientes primero).
+   status: "done" | "doing" | "pending"   ·   commit: SHA corto opcional   ·   pr: número opcional   ·   link: URL opcional */
+const REPO = "https://github.com/plazasgiovanny/img-poc-fabric";
+
+const EVENTS = [
+  { date:"2026-10-03", status:"done", title:"Código, archivos y datos en inglés",
+    detail:"Barrido de todo el repo: archivos, módulos, funciones, variables, tablas, columnas y valores en inglés; solo comentarios y documentación siguen en español. Glosario con la correspondencia al documento en docs/NAMING.md.", link:"NAMING.md" },
+  { date:"2026-10-03", status:"done", title:"PR #1 mergeado a main",
+    detail:"Etapas 2 y 3, controles, métricas, DAG, cuadernos, diagramas y explicación visual ya están en main.", commit:"55e3ef9", pr:1 },
+  { date:"2026-10-03", status:"done", title:"Verificación del entorno preparada",
+    detail:"Cuaderno que verifica 12 supuestos en Fabric, paquete listo para subir (wheel, DDL, datos sintéticos, cuadernos con la versión de git) y paso a paso con la prueba de aprobación." },
+  { date:"2026-10-03", status:"done", title:"Explicación visual de los cambios del PR #1",
+    detail:"HTML interactivo con el ciclo paso a paso (qué, por qué, para qué y aporte), tres diagramas editables en draw.io, un simulador de la regla de publicación y una guía de revisión.", link:"pr1_changes.html" },
+  { date:"2026-10-03", status:"done", title:"Repositorio público y PR #1 abiertos",
+    detail:"Repo creado con gh; main y feature/etapas-2-3 publicadas. El PR queda para revisión del equipo.", pr:1 },
+  { date:"2026-10-03", status:"done", title:"Historial de avances",
+    detail:"Este archivo (docs/timeline.html), sin dependencias; se actualiza con cada avance." },
+  { date:"2026-10-02", status:"done", title:"Etapas 2 y 3, controles, métricas, DAG y cuadernos",
+    detail:"Cruces, liquidación mínima, 4 controles, orquestadores runMultiple y guía del pipeline. 22 pruebas en verde; error <1 % a 500 y 5.000 registros sintéticos. Sin ejecutar en Fabric.", commit:"c4d81da" },
+  { date:"2026-10-02", status:"done", title:"Estructura inicial y Etapa 1",
+    detail:"img_lib, generador sintético con verdad conocida, DDL de control y parámetros ilustrativos, cuadernos de Bronce, Plata, MDM y Oro, CI.", commit:"ae18b61" },
+  { date:"2026-10-02", status:"done", title:"Propuesta de la PoC publicada",
+    detail:"Alcance, arquitectura, cronograma de 7 días, riesgos y pendientes para el equipo.", link:"https://claude.ai/artifact/Bi81eogZdjonv6j8WDsLvv" },
+  { date:"2026-10-02", status:"done", title:"Plan aprobado",
+    detail:"Datos sintéticos, 2 fuentes, MDM, publicación en OneLake, plazo de 1 semana y demo con métricas del Experimento 2. Trial, aprobación humana, runMultiple y Environments verificados en la documentación de Microsoft." },
+  { date:"2026-10-02", status:"done", title:"Documento v2 analizado",
+    detail:"13 fuentes, 4 controles, Tablas 7 a 9. «MBM» no aparece en el documento: se interpretó como MDM." },
+];
+
+const NEXT_UP = [
+  { status:"doing", title:"Verificación del entorno en el trial de Fabric", detail:"Preparado; falta ejecutarlo en el trial. Ver docs/ENV_CHECK.md: nombres de tablas, runMultiple, notebookutils y aprobación humana (G10)." },
+  { status:"pending", title:"Insumos del compañero (G2 a G7)", detail:"Las 2 fuentes y su diccionario, focalización, reglas de bloqueo, titular y listado del operador." },
+  { status:"pending", title:"Pipeline pl_img_cycle en el portal", detail:"Armar con las 4 aprobaciones y exportar el JSON a pipelines/." },
+  { status:"pending", title:"Corridas medidas del Experimento 2", detail:"3 corridas de 500 registros para la Tabla 4; opcional, 5.000 para el Experimento 3." },
+  { status:"pending", title:"Actualizar el documento v2", detail:"§7, §13, §15, §16, §18, §19, §23 y Tabla 4." },
+];
+
+const LABELS = { done:"hecho", doing:"en curso", pending:"pendiente" };
+const fmt = f => new Date(f + "T00:00:00").toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" });
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+function item(e){
+  const links = [];
+  if (e.commit) links.push(`<a href="${REPO}/commit/${esc(e.commit)}" target="_blank" rel="noopener">commit ${esc(e.commit)}</a>`);
+  if (e.pr) links.push(`<a href="${REPO}/pull/${e.pr}" target="_blank" rel="noopener">PR #${e.pr}</a>`);
+  if (e.link) links.push(`<a href="${esc(e.link)}" target="_blank" rel="noopener">enlace</a>`);
+  return `<li class="${e.status}">
+    <div class="date">${e.date ? fmt(e.date) + " · " : ""}<span class="tag">${LABELS[e.status]}</span></div>
+    <div class="title">${esc(e.title)}</div>
+    <p class="detail">${esc(e.detail || "")}</p>
+    ${links.length ? `<div class="meta">${links.join("")}</div>` : ""}
+  </li>`;
+}
+
+const repo = document.getElementById("repo");
+repo.href = REPO; repo.textContent = REPO.replace("https://github.com/", "");
+document.getElementById("progress").innerHTML = EVENTS.map(item).join("");
+document.getElementById("next_up").innerHTML = NEXT_UP.map(item).join("");
+
+const count = e => EVENTS.filter(x => x.status === e).length;
+document.getElementById("summary").innerHTML =
+  `<span><b>${count("done")}</b> avances</span>` +
+  `<span><b>${NEXT_UP.filter(x => x.status === "doing").length}</b> en curso</span>` +
+  `<span><b>${NEXT_UP.filter(x => x.status === "pending").length}</b> pendientes</span>` +
+  `<span>último: <b>${fmt(EVENTS[0].date)}</b></span>`;
+</script>
+</body>
+</html>

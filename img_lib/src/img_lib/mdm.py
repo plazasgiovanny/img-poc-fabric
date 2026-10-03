@@ -2,73 +2,73 @@
 con reglas de COINCIDENCIA y de SUPERVIVENCIA.
 
 Reglas por defecto, ILUSTRATIVAS hasta confirmar con el equipo (PENDIENTE G6):
-- coincidencia: igualdad exacta de (tipo_doc, num_doc) normalizados; nombres y fecha de
+- coincidencia: igualdad exacta de (doc_type, doc_number) normalizados; nombres y fecha de
   nacimiento solo actúan como desempate (si la misma llave documental trae fecha de nacimiento
   distinta, se trata como colisión y NO se unen).
 - supervivencia: para cada atributo prevalece la fuente de mayor prioridad que lo reporte."""
 from collections import defaultdict
 
-PRIORIDAD_FUENTES = ["poblacional", "validacion"]  # ILUSTRATIVO: la poblacional prevalece
-ATRIBUTOS = ("nombres", "apellidos", "fecha_nacimiento", "localidad", "direccion", "id_hogar_origen")
+SOURCE_PRIORITY = ["population", "validation"]  # ILUSTRATIVO: la poblacional prevalece
+ATTRIBUTES = ("first_names", "last_names", "birth_date", "locality", "address", "origin_household_id")
 
 
-def clave_match(reg: dict):
-    return (reg["tipo_doc"], reg["num_doc"])
+def match_key(rec: dict):
+    return (rec["doc_type"], rec["doc_number"])
 
 
-def construir_maestro(registros: list[dict], prioridad=PRIORIDAD_FUENTES):
-    """`registros`: dicts de Plata con `fuente` e `id_origen`. Devuelve
-    (personas, xref): `personas` = lista del maestro con fuente_ganadora por atributo;
-    `xref` = (fuente, id_origen) -> id_persona."""
-    grupos = defaultdict(list)
-    for r in registros:
-        grupos[clave_match(r)].append(r)
+def build_master(records: list[dict], priority=SOURCE_PRIORITY):
+    """`records`: dicts de Plata con `source` e `origin_id`. Devuelve
+    (people, xref): `people` = lista del maestro con winning_source_by_attribute;
+    `xref` = (source, origin_id) -> person_id."""
+    groups = defaultdict(list)
+    for r in records:
+        groups[match_key(r)].append(r)
 
-    personas, xref, n = [], [], 0
-    orden = {f: i for i, f in enumerate(prioridad)}
-    for llave in sorted(grupos):
+    people, xref, n = [], [], 0
+    rank = {f: i for i, f in enumerate(priority)}
+    for key in sorted(groups):
         # desempate: misma llave documental con fecha de nacimiento distinta => colisión
-        subgrupos = defaultdict(list)
-        for r in grupos[llave]:
-            subgrupos[r.get("fecha_nacimiento")].append(r)
-        if len(subgrupos) > 1:
-            fechas = [f for f in subgrupos if f]
-            if len(fechas) > 1:
-                partes = [subgrupos[f] for f in sorted(fechas)] + (
-                    [subgrupos[None]] if None in subgrupos else [])
+        subgroups = defaultdict(list)
+        for r in groups[key]:
+            subgroups[r.get("birth_date")].append(r)
+        if len(subgroups) > 1:
+            dates = [f for f in subgroups if f]
+            if len(dates) > 1:
+                parts = [subgroups[f] for f in sorted(dates)] + (
+                    [subgroups[None]] if None in subgroups else [])
             else:
-                partes = [sum(subgrupos.values(), [])]
+                parts = [sum(subgroups.values(), [])]
         else:
-            partes = [grupos[llave]]
-        for parte in partes:
+            parts = [groups[key]]
+        for part in parts:
             n += 1
-            id_persona = f"P{n:07d}"
-            parte = sorted(parte, key=lambda r: orden.get(r["fuente"], 99))
-            maestro = {"id_persona": id_persona, "tipo_doc": llave[0], "num_doc": llave[1]}
-            ganadora = {}
-            for a in ATRIBUTOS:
-                for r in parte:
+            person_id = f"P{n:07d}"
+            part = sorted(part, key=lambda r: rank.get(r["source"], 99))
+            master = {"person_id": person_id, "doc_type": key[0], "doc_number": key[1]}
+            winner = {}
+            for a in ATTRIBUTES:
+                for r in part:
                     if r.get(a) not in (None, ""):
-                        maestro[a] = r[a]
-                        ganadora[a] = r["fuente"]
+                        master[a] = r[a]
+                        winner[a] = r["source"]
                         break
-            maestro["fuente_ganadora_por_atributo"] = ganadora
-            maestro["n_registros_origen"] = len(parte)
-            personas.append(maestro)
-            for r in parte:
-                xref.append({"fuente": r["fuente"], "id_origen": r["id_origen"],
-                             "id_persona": id_persona, "regla_match": "documento_exacto"})
-    return personas, xref
+            master["winning_source_by_attribute"] = winner
+            master["n_origin_records"] = len(part)
+            people.append(master)
+            for r in part:
+                xref.append({"source": r["source"], "origin_id": r["origin_id"],
+                             "person_id": person_id, "match_rule": "exact_document"})
+    return people, xref
 
 
-def construir_hogares(personas: list[dict]):
-    """Maestro de hogares a partir de `id_hogar_origen` (ILUSTRATIVO: el agrupamiento real
+def build_households(people: list[dict]):
+    """Maestro de hogares a partir de `origin_household_id` (ILUSTRATIVO: el agrupamiento real
     del hogar depende del diccionario de la fuente poblacional, PENDIENTE G2)."""
-    hogares, asign = {}, {}
-    for p in personas:
-        h = p.get("id_hogar_origen") or f"SIN_HOGAR_{p['id_persona']}"
-        if h not in hogares:
-            hogares[h] = {"id_hogar": f"H{len(hogares) + 1:07d}", "id_hogar_origen": h, "miembros": 0}
-        hogares[h]["miembros"] += 1
-        asign[p["id_persona"]] = hogares[h]["id_hogar"]
-    return list(hogares.values()), asign
+    households, assign = {}, {}
+    for p in people:
+        h = p.get("origin_household_id") or f"NO_HOUSEHOLD_{p['person_id']}"
+        if h not in households:
+            households[h] = {"household_id": f"H{len(households) + 1:07d}", "origin_household_id": h, "members": 0}
+        households[h]["members"] += 1
+        assign[p["person_id"]] = households[h]["household_id"]
+    return list(households.values()), assign

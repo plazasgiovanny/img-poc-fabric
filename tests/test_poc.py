@@ -4,103 +4,103 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "img_lib" / "src"))
-sys.path.insert(0, str(ROOT / "generador"))
+sys.path.insert(0, str(ROOT / "generator"))
 
-from img_lib.params import hay_ilustrativos
-from img_lib.validar import validar_llaves, validar_registro
+from img_lib.params import has_illustrative
+from img_lib.validate import validate_keys, validate_record
 
-import generador
+import generator
 from img_lib import (
-    bitacora,
+    active,
     mdm,
-    normalizar_documento,
-    normalizar_nombre,
+    normalize_doc_number,
+    normalize_name,
+    run_log,
     sha256_bytes,
-    vigentes,
 )
 
-HOY = date(2026, 10, 1)
+TODAY = date(2026, 10, 1)
 
 
-def test_normalizar_documento():
-    assert normalizar_documento("99.123.456") == ("99123456", None)
-    assert normalizar_documento("99A123456")[1] == "documento_no_numerico"
-    assert normalizar_documento("123")[1] == "documento_longitud_invalida"
-    assert normalizar_documento("")[1] == "documento_vacio"
+def test_normalize_doc_number():
+    assert normalize_doc_number("99.123.456") == ("99123456", None)
+    assert normalize_doc_number("99A123456")[1] == "document_not_numeric"
+    assert normalize_doc_number("123")[1] == "document_invalid_length"
+    assert normalize_doc_number("")[1] == "document_empty"
 
 
-def test_normalizar_nombre():
-    assert normalizar_nombre("  José  Muñoz ") == ("JOSE MUÑOZ", None)
-    assert normalizar_nombre(None)[1] == "nombre_vacio"
+def test_normalize_name():
+    assert normalize_name("  José  Muñoz ") == ("JOSE MUÑOZ", None)
+    assert normalize_name(None)[1] == "name_empty"
 
 
-def test_huella_estable():
+def test_fingerprint_stable():
     assert sha256_bytes(b"abc") == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
 
 
-def test_parametros_vigentes():
-    filas = [
-        {"k": "a", "vigente_desde": "2026-01-01", "vigente_hasta": None, "es_ilustrativo": 1},
-        {"k": "b", "vigente_desde": "2025-01-01", "vigente_hasta": "2025-12-31"},
-        {"k": "c", "vigente_desde": "2026-12-01", "vigente_hasta": None},
+def test_active_params():
+    rows = [
+        {"k": "a", "valid_from": "2026-01-01", "valid_to": None, "is_illustrative": 1},
+        {"k": "b", "valid_from": "2025-01-01", "valid_to": "2025-12-31"},
+        {"k": "c", "valid_from": "2026-12-01", "valid_to": None},
     ]
-    v = vigentes(filas, "2026-09-30")
-    assert [f["k"] for f in v] == ["a"] and hay_ilustrativos(v)
+    v = active(rows, "2026-09-30")
+    assert [f["k"] for f in v] == ["a"] and has_illustrative(v)
 
 
-def test_validar_llaves():
-    assert validar_llaves([{"a": 1}, {"a": 1}, {"a": None}], ["a"])
+def test_validate_keys():
+    assert validate_keys([{"a": 1}, {"a": 1}, {"a": None}], ["a"])
 
 
-def test_bitacora_campos():
-    e = bitacora.evento(id_ciclo="2026-09", id_ejecucion="E1", cuaderno="nb", version_cuaderno="v",
-                        etapa_proceso="bronce", evento_trazabilidad="fin")
-    assert all(c in e for c in bitacora.CAMPOS_INSTRUMENTO_A + bitacora.CAMPOS_TRAZABILIDAD)
-    assert e["id_lote"] == "E1"
+def test_run_log_fields():
+    e = run_log.event(cycle_id="2026-09", execution_id="E1", notebook="nb", notebook_version="v",
+                        process_stage="bronze", trace_event="end")
+    assert all(c in e for c in run_log.INSTRUMENT_A_FIELDS + run_log.TRACEABILITY_FIELDS)
+    assert e["batch_id"] == "E1"
 
 
-def test_generador_determinista_y_defectos():
-    a = generador.generar(500, 1)
-    b = generador.generar(500, 1)
+def test_generator_deterministic_and_defects():
+    a = generator.generate(500, 1)
+    b = generator.generate(500, 1)
     assert a == b
-    defectos = "|".join(v["defectos"] for v in a["verdad"])
-    for d in ("doc_malformado", "dup_exacto", "variante_nombre"):
-        assert d in defectos
-    assert all(r["num_doc"].startswith("99") for r in a["poblacional"] if r["num_doc"][:2].isdigit())
+    defects = "|".join(v["defects"] for v in a["ground_truth"])
+    for d in ("malformed_doc", "exact_duplicate", "name_variant"):
+        assert d in defects
+    assert all(r["doc_number"].startswith("99") for r in a["population"] if r["doc_number"][:2].isdigit())
 
 
-def test_pipeline_logico_contra_verdad():
+def test_logical_pipeline_against_ground_truth():
     """Plata + MDM contra la verdad conocida: error < 1 % en cuarentena y en unificación de personas."""
-    datos = generador.generar(500, 1)
-    verdad = {(v["fuente"], v["id_origen"]): v for v in datos["verdad"]}
-    plata, cuarentena = [], []
-    for fuente in ("poblacional", "validacion"):
-        for r in datos[fuente]:
-            reg, causas = validar_registro({**r, "fuente": fuente}, hoy=HOY)
-            (cuarentena if causas else plata).append(reg)
+    data = generator.generate(500, 1)
+    ground_truth = {(v["source"], v["origin_id"]): v for v in data["ground_truth"]}
+    silver, quarantine = [], []
+    for source in ("population", "validation"):
+        for r in data[source]:
+            rec, causes = validate_record({**r, "source": source}, today=TODAY)
+            (quarantine if causes else silver).append(rec)
 
     # cuarentena: exactamente lo que la verdad dice
-    esperados = {k for k, v in verdad.items() if v["va_a_cuarentena"]}
-    obtenidos = {(("poblacional" if r["id_origen"].startswith("POB") else "validacion"), r["id_origen"])
-                 for r in cuarentena}
-    errores_q = len(esperados ^ obtenidos)
-    assert errores_q / len(verdad) < 0.01
+    expected = {k for k, v in ground_truth.items() if v["goes_to_quarantine"]}
+    obtained = {(("population" if r["origin_id"].startswith("POP") else "validation"), r["origin_id"])
+                 for r in quarantine}
+    q_errors = len(expected ^ obtained)
+    assert q_errors / len(ground_truth) < 0.01
 
-    _, xref = mdm.construir_maestro(plata)
-    por_id = {}
+    _, xref = mdm.build_master(silver)
+    by_id = {}
     for x in xref:
-        por_id.setdefault(x["id_persona"], set()).add(verdad[(x["fuente"], x["id_origen"])]["id_persona_real"])
-    mezclas = sum(1 for s in por_id.values() if len(s) > 1)  # personas distintas unidas (falso positivo)
-    real_a_ids = {}
+        by_id.setdefault(x["person_id"], set()).add(ground_truth[(x["source"], x["origin_id"])]["true_person_id"])
+    merges = sum(1 for s in by_id.values() if len(s) > 1)  # personas distintas unidas (falso positivo)
+    true_to_ids = {}
     for x in xref:
-        real_a_ids.setdefault(verdad[(x["fuente"], x["id_origen"])]["id_persona_real"], set()).add(x["id_persona"])
-    partidas = sum(1 for s in real_a_ids.values() if len(s) > 1)  # una persona partida (falso negativo)
-    assert (mezclas + partidas) / len(real_a_ids) < 0.01
+        true_to_ids.setdefault(ground_truth[(x["source"], x["origin_id"])]["true_person_id"], set()).add(x["person_id"])
+    splits = sum(1 for s in true_to_ids.values() if len(s) > 1)  # una persona partida (falso negativo)
+    assert (merges + splits) / len(true_to_ids) < 0.01
 
 
-def test_corte2_cambia_pocos():
-    c1, c2 = generador.generar(500, 1), generador.generar(500, 2)
-    est1 = {v["id_persona_real"]: v["estado_real"] for v in c1["verdad"]}
-    est2 = {v["id_persona_real"]: v["estado_real"] for v in c2["verdad"]}
-    cambios = sum(1 for k in est1 if k in est2 and est1[k] != est2[k])
-    assert 0 < cambios < 0.05 * len(est1)
+def test_cutoff2_changes_few():
+    c1, c2 = generator.generate(500, 1), generator.generate(500, 2)
+    st1 = {v["true_person_id"]: v["true_status"] for v in c1["ground_truth"]}
+    st2 = {v["true_person_id"]: v["true_status"] for v in c2["ground_truth"]}
+    changes = sum(1 for k in st1 if k in st2 and st1[k] != st2[k])
+    assert 0 < changes < 0.05 * len(st1)

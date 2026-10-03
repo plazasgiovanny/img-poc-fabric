@@ -19,7 +19,9 @@ import json
 from img_lib import controls
 if control == "C1":
     deliveries = [r.asDict() for r in spark.table("lh_bronze.bronze.deliveries").where(f"execution_id LIKE '{cycle_id}%'").collect()]
-    quarantine = [r.asDict() for r in spark.table("lh_silver.quality.quarantine").where(f"execution_id LIKE '{cycle_id}%'").collect()]
+    # la tabla de cuarentena solo existe si algún lote tuvo rechazos
+    quarantine = ([r.asDict() for r in spark.table("lh_silver.quality.quarantine").where(f"execution_id LIKE '{cycle_id}%'").collect()]
+                  if spark.catalog.tableExists("lh_silver.quality.quarantine") else [])  # noqa: F821
     in_gold = {f: spark.table(f"lh_gold.sources.{f}_cutoff").where(f"cycle_id = '{cycle_id}'").count() for f in ("population", "validation")}
     res = controls.summary_c1(deliveries, quarantine, in_gold)
 elif control == "C2":

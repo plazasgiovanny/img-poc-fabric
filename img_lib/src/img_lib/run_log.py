@@ -50,5 +50,8 @@ def mark_commits(spark, execution_id: str) -> None:
     spark.conf.set("spark.databricks.delta.commitInfo.userMetadata", execution_id)
 
 
-def record(spark, row: dict) -> None:  # pragma: no cover - requiere Spark/Fabric
-    spark.createDataFrame([row]).write.format("delta").mode("append").saveAsTable(RUN_LOG_TABLE)
+def record(spark, row: dict, table: str = RUN_LOG_TABLE) -> None:
+    """Escribe la fila en la bitácora. Usa `cycle.write` para que las columnas con None (data_source, notes,
+    output_hash...) tomen el tipo de la tabla en vez de fallar al inferir el esquema."""
+    from .cycle import write  # import diferido: cycle importa este módulo
+    write(spark, [row], table)

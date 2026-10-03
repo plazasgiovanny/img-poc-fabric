@@ -52,6 +52,17 @@ def _write_with_none():
     return f"write() accepts an all-None column ({n} rows)"
 
 
+def _run_log_record():
+    from img_lib import run_log
+    spark.sql("CREATE TABLE IF NOT EXISTS lh_control.ctl.env_check_run_log USING DELTA "  # noqa: F821
+              "AS SELECT * FROM lh_control.ctl.run_log WHERE 1 = 0")
+    row = run_log.event(cycle_id="env_check", execution_id="env-check-1", notebook="nb_env_check", notebook_version="dev",
+                        process_stage="check", trace_event="end")   # data_source, notes, output_hash... quedan en None
+    run_log.record(spark, row, "lh_control.ctl.env_check_run_log")  # noqa: F821
+    n = spark.table("lh_control.ctl.env_check_run_log").count()  # noqa: F821
+    return f"run_log.record() writes a row with None columns using the table schema ({n} row)"
+
+
 def _audit():
     tag = "env-check-audit-1"
     spark.conf.set("spark.databricks.delta.commitInfo.userMetadata", tag)  # noqa: F821
@@ -116,6 +127,7 @@ def _run_multiple():
 for name, fn in [("img_lib in the Environment", _img_lib), ("default lakehouse", _default),
                    ("create lakehouse.schema schemas", _schemas), ("three-part table names", _three_part_names),
                    ("write() with an all-None column", _write_with_none),
+                   ("run_log.record() with None columns", _run_log_record),
                    ("userMetadata in DESCRIBE HISTORY", _audit), ("time travel VERSION AS OF", _time_travel),
                    ("notebookutils.fs put/head/cp/ls", _fs), ("notebookutils.fs.cp recursive", _fs_recursive),
                    ("notebookutils.runtime.context", _context), ("control DDL applied", _ddl),

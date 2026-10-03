@@ -50,10 +50,15 @@ def ddl_types(rows) -> str:
     return ", ".join(parts)
 
 
-def write(spark, rows, table, mode="append") -> int:  # pragma: no cover - requiere Spark/Fabric
-    """Escritura estandarizada en Delta con esquema explícito. Devuelve la cantidad de filas."""
+def write(spark, rows, table, mode="append") -> int:
+    """Escritura estandarizada en Delta con esquema explícito. Devuelve la cantidad de filas.
+
+    Si la tabla ya existe (por ejemplo, creada por el DDL), manda su esquema: así una columna con solo
+    None conserva el tipo declarado (BIGINT, DOUBLE...) en vez de caer a string y chocar al anexar.
+    Si no existe, se infiere con `ddl_types`."""
     if rows:
-        spark.createDataFrame(rows, schema=ddl_types(rows)).write.format("delta").mode(mode).saveAsTable(table)
+        schema = spark.table(table).schema if spark.catalog.tableExists(table) else ddl_types(rows)
+        spark.createDataFrame(rows, schema=schema).write.format("delta").mode(mode).saveAsTable(table)
     return len(rows)
 
 

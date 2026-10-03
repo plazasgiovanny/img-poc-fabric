@@ -6,3 +6,4 @@
 - Etapas 2 y 3: cruces, liquidación mínima, controles, DAG, métricas, cuadernos y guía del pipeline.
 - Verificación del entorno: `nb_env_check` (+2 hijos), `scripts/prepare_package.py` y `docs/ENV_CHECK.md`.
 - Renombrado a inglés de archivos, módulos, funciones, variables, tablas, columnas y valores (ver `docs/NAMING.md`).
+- `cycle.write` usa el esquema de la tabla existente y `run_log.record` lo reutiliza (columnas con None); `nb_ctl_summary` tolera la ausencia de la tabla de cuarentena; nueva prueba en `nb_env_check`.

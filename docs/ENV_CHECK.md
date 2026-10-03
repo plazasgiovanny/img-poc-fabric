@@ -35,7 +35,7 @@ aprobación responde G10.
    `runMultiple` y del pipeline no sobrescriben las variables.
 
 ## 4. Ejecutar nb_env_check
-Abrir `nb_env_check` y ejecutarlo completo. Esperado: **12 OK**. El resultado queda en pantalla y en
+Abrir `nb_env_check` y ejecutarlo completo. Esperado: **13 OK**. El resultado queda en pantalla y en
 `lh_control > Files/env_check_result.json`.
 
 | Prueba | Si falla, significa |
@@ -45,6 +45,7 @@ Abrir `nb_env_check` y ejecutarlo completo. Esperado: **12 OK**. El resultado qu
 | notebookutils.fs put/head/cp/ls | Ajustar `nb_e1_bronze`, `nb_06_report`, `nb_07_publish` y `nb_ctl_summary` |
 | runMultiple con DAG | Revisar lakehouse por defecto de los hijos y el timeout por celda |
 | write() with an all-None column | Revisar `img_lib.cycle.ddl_types` |
+| run_log.record() with None columns | Revisar `img_lib.cycle.write` y que `ctl.run_log` exista (DDL): `close()` llama a `record()` en todos los cuadernos |
 
 ## 5. Prueba de aprobación (pendiente G10)
 Crear el pipeline `pl_env_check_approval`: Notebook `nb_env_check_child_a` → **Approval** (tipo Outlook 365 o Teams,

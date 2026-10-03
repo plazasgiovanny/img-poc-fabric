@@ -1,0 +1,22 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest ruff build
+      - run: ruff check .
+      - run: pytest -q tests
+      - run: python -m build --wheel img_lib
+      - uses: actions/upload-artifact@v4
+        with:
+          name: img_lib-wheel
+          path: img_lib/dist/*.whl

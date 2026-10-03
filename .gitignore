@@ -1,0 +1,26 @@
+# Repo PÚBLICO: nunca versionar datos, credenciales, IDs de tenant ni correos.
+# Los datos sintéticos se regeneran con la semilla (generador/).
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Datos generados o de salida
+data/
+salida/
+Files/
+*.csv
+*.parquet
+*.xlsx
+*.sha256
+!ddl/*.csv
+
+# Secretos / configuración local
+.env
+*.env
+secrets*
+tenant*.json

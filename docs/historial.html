@@ -60,6 +60,10 @@
 const REPO = "https://github.com/plazasgiovanny/img-poc-fabric";
 
 const EVENTOS = [
+  { fecha:"2026-10-03", estado:"hecho", titulo:"PR #1 mergeado a main",
+    detalle:"Etapas 2 y 3, controles, métricas, DAG, cuadernos, diagramas y explicación visual ya están en main.", commit:"55e3ef9", pr:1 },
+  { fecha:"2026-10-03", estado:"hecho", titulo:"Spike del día 1 preparado",
+    detalle:"Cuaderno que verifica 12 supuestos en Fabric, paquete listo para subir (wheel, DDL, datos sintéticos, cuadernos con la versión de git) y paso a paso con la prueba de aprobación." },
   { fecha:"2026-10-03", estado:"hecho", titulo:"Explicación visual de los cambios del PR #1",
     detalle:"HTML interactivo con el ciclo paso a paso (qué, por qué, para qué y aporte), tres diagramas editables en draw.io, un simulador de la regla de publicación y una guía de revisión.", enlace:"cambios_pr1.html" },
   { fecha:"2026-10-03", estado:"hecho", titulo:"Repositorio público y PR #1 abiertos",
@@ -79,8 +83,7 @@ const EVENTOS = [
 ];
 
 const PROXIMO = [
-  { estado:"curso",     titulo:"Revisión del PR #1", detalle:"Revisión cruzada antes de hacer merge a main." },
-  { estado:"pendiente", titulo:"Spike en el trial de Fabric (día 1)", detalle:"Nombres de tablas entre lakehouses, runMultiple, notebookutils, aprobación humana (G10)." },
+  { estado:"curso", titulo:"Spike en el trial de Fabric (día 1)", detalle:"Preparado; falta ejecutarlo en el trial. Ver docs/SPIKE_DIA1.md: nombres de tablas, runMultiple, notebookutils y aprobación humana (G10)." },
   { estado:"pendiente", titulo:"Insumos del compañero (G2 a G7)", detalle:"Las 2 fuentes y su diccionario, focalización, reglas de bloqueo, titular y listado del operador." },
   { estado:"pendiente", titulo:"Pipeline pl_img_ciclo en el portal", detalle:"Armar con las 4 aprobaciones y exportar el JSON a pipelines/." },
   { estado:"pendiente", titulo:"Corridas medidas del Experimento 2", detalle:"3 corridas de 500 registros para la Tabla 4; opcional, 5.000 para el Experimento 3." },

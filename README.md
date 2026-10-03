@@ -45,6 +45,9 @@ python generador/generador.py --n 500 --corte 1 --salida data   # data/ está en
 ```
 
 ## Despliegue en el trial de Fabric (resumen)
+Primero, el spike: [`docs/SPIKE_DIA1.md`](docs/SPIKE_DIA1.md). El paquete para subir se arma con
+`python scripts/preparar_paquete.py` (genera `salida/paquete_fabric/`, ignorado por git).
+
 1. Crear workspace `IMG_PoC` y 4 lakehouses con schemas: `lh_bronce`, `lh_plata`, `lh_oro`, `lh_control`
    (`lh_control` = lakehouse por defecto de **todos** los cuadernos).
 2. Crear el Environment `env_img`, subir el `.whl` (modo Quick) y publicarlo.

@@ -4,7 +4,6 @@
 
 # %% Parámetros
 id_ciclo = "2026-09"
-corte = 1
 id_ejecucion = None
 pipeline_run_id = None
 VERSION_CUADERNO = "dev"
@@ -12,16 +11,17 @@ VERSION_CUADERNO = "dev"
 # %% Ejecución
 from datetime import date
 
-from img_lib.ciclo import cerrar, iniciar
+from img_lib.ciclo import cerrar, escribir, iniciar, leer_ciclo
 from img_lib.validar import validar_registro
 
 ID_EJEC, T0 = iniciar(spark, id_ciclo, id_ejecucion)  # noqa: F821
+corte = leer_ciclo(spark, id_ciclo)["corte"]  # noqa: F821
 hoy = date.today()
 total, errores_dup = 0, 0
 
 for fuente in ("poblacional", "validacion"):
     filas = [r.asDict() for r in spark.table(f"lh_bronce.bronce.{fuente}_raw")  # noqa: F821
-             .where(f"_id_ciclo = '{id_ciclo}' AND _fecha_corte = 'corte{corte}'").collect()]
+             .where(f"_id_ciclo = '{id_ciclo}' AND _fecha_corte = '{corte}'").collect()]
     ok, rechazados, vistos = [], [], set()
     for r in filas:
         reg, causas = validar_registro(r, hoy=hoy)
@@ -35,15 +35,11 @@ for fuente in ("poblacional", "validacion"):
             errores_dup += 1
             continue
         vistos.add(llave)
-        reg["id_ciclo"], reg["fecha_corte"] = id_ciclo, f"corte{corte}"
+        reg["id_ciclo"], reg["corte"] = id_ciclo, corte
         ok.append(reg)
     total += len(filas)
-    if ok:
-        spark.createDataFrame(ok).write.format("delta").mode("append") \
-            .saveAsTable(f"lh_plata.{fuente}.registros")  # noqa: F821
-    if rechazados:
-        spark.createDataFrame(rechazados).write.format("delta").mode("append") \
-            .saveAsTable("lh_plata.calidad.cuarentena")  # noqa: F821
+    escribir(spark, ok, f"lh_plata.{fuente}.registros")  # noqa: F821
+    escribir(spark, rechazados, "lh_plata.calidad.cuarentena")  # noqa: F821
 
 cerrar(spark, cuaderno="nb_e1_plata", version_cuaderno=VERSION_CUADERNO, etapa="plata",  # noqa: F821
        id_ciclo=id_ciclo, id_ejecucion=ID_EJEC, t0=T0, pipeline_run_id=pipeline_run_id,

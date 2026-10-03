@@ -5,7 +5,6 @@
 
 # %% Parámetros (marcar esta celda como "parameters" en Fabric)
 id_ciclo = "2026-09"
-corte = 1
 id_ejecucion = None
 pipeline_run_id = None
 VERSION_CUADERNO = "dev"  # se reemplaza por el tag/SHA de git al importar (ver README)
@@ -16,25 +15,26 @@ from datetime import datetime, timezone
 from pyspark.sql import functions as F
 
 from img_lib import sha256_bytes
-from img_lib.ciclo import cerrar, iniciar
+from img_lib.ciclo import cerrar, iniciar, leer_ciclo
 
 ID_EJEC, T0 = iniciar(spark, id_ciclo, id_ejecucion)  # noqa: F821
+corte = leer_ciclo(spark, id_ciclo)["corte"]  # noqa: F821
 
 # PENDIENTE G2: fuentes reales y entidad remitente. Genérico: poblacional + validacion.
 FUENTES = {"poblacional": "ENTIDAD_REMITENTE_PENDIENTE", "validacion": "ENTIDAD_REMITENTE_PENDIENTE"}
 meta = []
 for fuente, remitente in FUENTES.items():
-    ruta = f"Files/sinteticos/landing/corte{corte}/{fuente}.csv"
+    ruta = f"Files/sinteticos/landing/{corte}/{fuente}.csv"
     crudo = spark.read.text(ruta, wholetext=True).first()[0].encode("utf-8")  # noqa: F821
     df = spark.read.option("header", True).option("inferSchema", False).csv(ruta)  # noqa: F821
     n = df.count()
     # copia inmutable del archivo, por fuente y fecha de corte
     destino = (f"abfss://IMG_PoC@onelake.dfs.fabric.microsoft.com/lh_bronce.Lakehouse/"
-               f"Files/entregas/{fuente}/corte{corte}/{fuente}.csv")
+               f"Files/entregas/{fuente}/{corte}/{fuente}.csv")
     notebookutils.fs.cp(ruta, destino, True)  # noqa: F821
-    (df.withColumn("_id_ciclo", F.lit(id_ciclo)).withColumn("_fecha_corte", F.lit(f"corte{corte}"))
+    (df.withColumn("_id_ciclo", F.lit(id_ciclo)).withColumn("_fecha_corte", F.lit(corte))
        .write.format("delta").mode("append").saveAsTable(f"lh_bronce.bronce.{fuente}_raw"))
-    meta.append((fuente, remitente, f"corte{corte}",
+    meta.append((fuente, remitente, corte,
                  datetime.now(timezone.utc).isoformat(timespec="seconds"),
                  f"{fuente}.csv", n, sha256_bytes(crudo), ID_EJEC))
 

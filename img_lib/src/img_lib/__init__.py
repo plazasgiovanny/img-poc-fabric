@@ -4,13 +4,13 @@ Python puro; las funciones que tocan Spark/Delta importan `pyspark` de forma dif
 
 __version__ = "0.1.0"
 
-from .huella import sha256_archivo, sha256_bytes  # noqa: F401
-from .normalizar import (  # noqa: F401
-    normalizar_documento,
-    normalizar_fecha,
-    normalizar_localidad,
-    normalizar_nombre,
-    normalizar_tipo_doc,
+from .fingerprint import sha256_bytes, sha256_file  # noqa: F401
+from .normalize import (  # noqa: F401
+    normalize_date,
+    normalize_doc_number,
+    normalize_doc_type,
+    normalize_locality,
+    normalize_name,
 )
-from .params import vigentes  # noqa: F401
-from .validar import validar_llaves, validar_registro  # noqa: F401
+from .params import active  # noqa: F401
+from .validate import validate_keys, validate_record  # noqa: F401

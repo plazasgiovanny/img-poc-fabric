@@ -18,18 +18,18 @@ aprobación responde G10.
 ## 1. Workspace, lakehouses y Environment
 1. Crear el workspace **`IMG_PoC`** asignado a la capacidad Trial. (El nombre importa: los cuadernos usan
    `abfss://IMG_PoC@onelake...`.)
-2. Crear 4 lakehouses **con schemas habilitados**: `lh_bronce`, `lh_plata`, `lh_oro`, `lh_control`.
+2. Crear 4 lakehouses **con schemas habilitados**: `lh_bronze`, `lh_silver`, `lh_gold`, `lh_control`.
 3. Crear el Environment **`env_img`** > Libraries > subir `1_environment/img_lib-*.whl` > **Publish** (modo Quick).
    Los cuadernos que usan `img_lib` deben tener este Environment adjunto.
 
 ## 2. Contrato de datos y datos sintéticos
-1. En `lh_control`, ejecutar `2_ddl/01_ctl_param.sql` y luego `2_ddl/02_param_ilustrativos.sql`
+1. En `lh_control`, ejecutar `2_ddl/01_ctl_param.sql` y luego `2_ddl/02_param_illustrative.sql`
    (celda SQL de un cuaderno con `lh_control` por defecto).
-2. En `lh_control` > Files, subir la carpeta `3_datos/Files/sinteticos` (queda `Files/sinteticos/landing/corte1/…`
-   y `Files/sinteticos/verdad/…`). La carpeta `verdad` nunca la lee el pipeline; solo sirve para medir errores.
+2. En `lh_control` > Files, subir la carpeta `3_data/Files/synthetic` (queda `Files/synthetic/landing/cutoff1/…`
+   y `Files/synthetic/ground_truth/…`). La carpeta `ground_truth` nunca la lee el pipeline; solo sirve para medir errores.
 
 ## 3. Importar cuadernos
-1. Workspace > Import > Notebook: subir los `.py` de `4_notebooks/` (traen la versión de git en `VERSION_CUADERNO`).
+1. Workspace > Import > Notebook: subir los `.py` de `4_notebooks/` (traen la versión de git en `NOTEBOOK_VERSION`).
 2. En **cada** cuaderno: lakehouse por defecto = `lh_control`; Environment = `env_img`; marcar la primera celda de
    parámetros como **parameter cell** (menú de la celda > Toggle parameter cell). Sin esto, los argumentos de
    `runMultiple` y del pipeline no sobrescriben las variables.
@@ -40,11 +40,11 @@ Abrir `nb_env_check` y ejecutarlo completo. Esperado: **12 OK**. El resultado qu
 
 | Prueba | Si falla, significa |
 |---|---|
-| tablas con nombre de 3 partes | Cambiar todos los `lh_x.schema.tabla` por la forma que acepte el trial |
-| userMetadata en DESCRIBE HISTORY | El criterio de auditoría del 100 % necesita otro mecanismo (p. ej. columna `id_ejecucion` en cada tabla) |
-| notebookutils.fs … | Ajustar `nb_e1_bronce`, `nb_06_informe`, `nb_07_publicar` y `nb_ctl_resumen` |
+| tablas con nombre de 3 partes | Cambiar todos los `lh_x.schema.table` por la forma que acepte el trial |
+| userMetadata en DESCRIBE HISTORY | El criterio de auditoría del 100 % necesita otro mecanismo (p. ej. columna `execution_id` en cada tabla) |
+| notebookutils.fs … | Ajustar `nb_e1_bronze`, `nb_06_report`, `nb_07_publish` y `nb_ctl_summary` |
 | runMultiple con DAG | Revisar lakehouse por defecto de los hijos y el timeout por celda |
-| escribir() con columna todo None | Revisar `img_lib.ciclo.ddl_tipos` |
+| escribir() con columna todo None | Revisar `img_lib.cycle.ddl_types` |
 
 ## 5. Prueba de aprobación (pendiente G10)
 Crear el pipeline `pl_env_check_approval`: Notebook `nb_env_check_child_a` → **Approval** (tipo Outlook 365 o Teams,
@@ -58,7 +58,7 @@ Ejecutar tres veces y anotar lo que se ve en **Monitoring hub**:
 | Nadie responde (timeout) | ¿Falla la actividad y sigue la ruta de rechazo, como pide el §19? |
 
 **Decisión:** si la actividad no existe, no manda correo o no trae al aprobador, se usa el **plan B**
-(`Until` + `Wait` + `Lookup` sobre `ctl.aprobaciones` y `nb_aprobar`; ver `pipelines/README.md`).
+(`Until` + `Wait` + `Lookup` sobre `ctl.approvals` y `nb_approve`; ver `pipelines/README.md`).
 
 ## 6. Qué reportar
 Pegar en el chat (sin IDs de tenant ni correos):
@@ -67,4 +67,4 @@ Pegar en el chat (sin IDs de tenant ni correos):
 - Resultado de los tres escenarios de aprobación y los campos del Output.
 - Cualquier mensaje de error completo.
 
-Con eso se ajusta el código, se arma `pl_img_ciclo` y se pasa a las corridas medidas del Experimento 2.
+Con eso se ajusta el código, se arma `pl_img_cycle` y se pasa a las corridas medidas del Experimento 2.

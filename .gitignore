@@ -11,7 +11,7 @@ dist/
 
 # Datos generados o de salida
 data/
-salida/
+output/
 Files/
 *.csv
 *.parquet

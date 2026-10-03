@@ -32,14 +32,24 @@ uno a otro sin perder la trazabilidad.
 | Bronce, Plata, Oro | `lh_bronze`, `lh_silver`, `lh_gold` (esquema `bronze` en el primero) |
 | cuarentena | `lh_silver.quality.quarantine` |
 | fuentes poblacionales / de validación | esquemas `population`, `validation` (Plata) y `sources` (Oro) |
+| maestro de datos (MDM) | `lh_silver.mdm` (tablas `person` y `xref`) |
 | base de cruces | `lh_gold.crosschecks.crosscheck_base` |
 | liquidación | esquema `settlement` (Oro) |
 | control y parámetros | `lh_control`: esquemas `ctl` y `param` |
 
+## Pipelines y plantillas
+- **Pipelines:** `pl_<tema>`, en inglés y en minúsculas (`pl_env_check_approval`, `pl_img_cycle`). El nombre del pipeline es
+  igual al del archivo de su plantilla: `pipelines/templates/<nombre>.template.json`.
+- **Plantillas:** terminan en `.template.json` y no llevan IDs ni correos. Los valores de entorno son marcadores
+  `{{WORKSPACE_ID}}`, `{{APPROVERS}}`, `{{TEAMS_CHAT_ID}}`, `{{TEAMS_CONNECTION_ID}}` y `{{NOTEBOOK_ID:<nombre del cuaderno>}}`
+  (en mayúsculas, con llaves dobles). Los valores reales van en `pipelines/local.json` (ignorado por git; el modelo es `local.example.json`).
+- **Actividades** de un pipeline: nombres en inglés (`NotebookA`, `Approval1`, `Fail`; en `pl_img_cycle`, `init`, `orch_e1`, `approval_c1`…).
+- Cada pipeline nuevo se agrega a `pipelines/INVENTORY.md` en el mismo PR que su plantilla.
+
 ## Módulos de `img_lib`
 `normalize` (normalizar), `validate` (validar), `params` (parámetros vigentes), `fingerprint` (huella SHA-256),
 `run_log` (bitácora de ejecución), `mdm`, `crosschecks` (cruces), `settlement` (liquidación), `controls` (controles),
-`dag`, `metrics` (métricas), `cycle` (ciclo), `illustrative` (parámetros ilustrativos).
+`dag`, `metrics` (métricas), `cycle` (ciclo: apertura/cierre de la ejecución y escritura Delta), `illustrative` (parámetros ilustrativos).
 
 ## Base de cruces (Tabla 7)
 | Grupo del documento | Columnas |

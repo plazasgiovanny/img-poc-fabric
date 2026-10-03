@@ -1,5 +1,5 @@
 # Repo PÚBLICO: nunca versionar datos, credenciales, IDs de tenant ni correos.
-# Los datos sintéticos se regeneran con la semilla (generador/).
+# Los datos sintéticos se regeneran con la semilla (generator/).
 __pycache__/
 *.pyc
 .pytest_cache/

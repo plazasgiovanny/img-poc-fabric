@@ -1,4 +1,4 @@
-# nb_ctl_summary — §19: arma el resumen que ve el aprobador y deja la solicitud (decisión PENDIENTE) en ctl.approvals. Parámetro adicional: control (C1..C4).
+# nb_ctl_summary — §19: arma el resumen que ve el aprobador y deja la solicitud (decisión PENDING) en ctl.approvals. Parámetro adicional: control (C1..C4).
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"

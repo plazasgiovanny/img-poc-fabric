@@ -25,7 +25,7 @@ Ingreso Mínimo Garantizado (IMG), SDIS Bogotá* (documento `Caso_Analisis_IMG_A
 ## Estado
 | Componente | Estado |
 |---|---|
-| `img_lib` (normalizar, validar, params, huella, bitácora, MDM, cruces, liquidación, controles, DAG, métricas) | Hecho, con pruebas locales |
+| `img_lib` (`normalize`, `validate`, `params`, `fingerprint`, `run_log`, `mdm`, `crosschecks`, `settlement`, `controls`, `dag`, `metrics`) | Hecho, con pruebas locales |
 | Cadena lógica completa sobre datos sintéticos (`tests/test_e2e.py`) | Hecho: error <1 % a 500 y a 5.000 registros |
 | Generador sintético | Hecho (esquema **provisional**, PENDIENTE G2) |
 | DDL `ctl/param` + parámetros ilustrativos | Hecho |

@@ -16,8 +16,8 @@ def first_per_person(rows):
 
 def build_base(pop_gold, val_gold, *, cycle_id, cutoff_date, source_versions, execution_id,
                    notebook_version, ts):
-    """`pop_gold` / `val_gold`: filas de lh_gold.sources.*_corte (con person_id e household_id).
-    `source_versions`: {"poblacional": ..., "validacion": ...}. Devuelve filas de crosschecks.crosscheck_base."""
+    """`pop_gold` / `val_gold`: filas de lh_gold.sources.*_cutoff (con person_id e household_id).
+    `source_versions`: {"population": ..., "validation": ...}. Devuelve filas de crosschecks.crosscheck_base."""
     pop = first_per_person(pop_gold)
     val = first_per_person(val_gold)
     base = []

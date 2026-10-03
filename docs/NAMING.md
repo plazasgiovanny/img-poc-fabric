@@ -75,6 +75,9 @@ uno a otro sin perder la trazabilidad.
 | encontrado en validación: SI / NO | `YES` / `NO` |
 | parámetros ilustrativos | columna `is_illustrative = 1` |
 | `id_ciclo` (único parámetro de los cuadernos, §18.3) | `cycle_id` |
+| `direccion` de la regla de titular (sentido ASC/DESC) | `sort_direction` (distinto de `address`, la dirección de residencia) |
+| `orden` de la regla de titular | `rank` |
+| `por` de la partición de listados | `split_by` |
 
 ## Fuentes reales (pendiente G2)
 Los nombres de campo de las fuentes reales (por ejemplo los de Sisbén IV) serán en español. Cuando el equipo entregue el

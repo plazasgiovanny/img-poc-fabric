@@ -54,7 +54,7 @@ def approval_row(*, cycle_id, control, decision, approver, mechanism, requested_
 
 
 def all_approved(rows, cycle_id, controls=("C1", "C2", "C3", "C4")):
-    """Último estado por control: solo APROBADO cuenta. Pendiente, vencido o ausente = no aprobado."""
+    """Último estado por control: solo APPROVED cuenta. PENDING, EXPIRED o ausente = no aprobado."""
     last = {}
     by_date = sorted((f for f in rows if f["cycle_id"] == cycle_id),
                        key=lambda f: f["decided_at"] or f["requested_at"] or "")

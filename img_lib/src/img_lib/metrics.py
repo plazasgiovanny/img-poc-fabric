@@ -4,7 +4,7 @@ La comparación es contra la VERDAD CONOCIDA del generador sintético, no contra
 
 
 def quarantine_error_rate(ground_truth, quarantine_ids):
-    """verdad: filas con fuente, origin_id, goes_to_quarantine. quarantine_ids: {(fuente, origin_id)}."""
+    """ground_truth: filas con source, origin_id, goes_to_quarantine. quarantine_ids: {(source, origin_id)}."""
     expected = {(v["source"], v["origin_id"]) for v in ground_truth if int(v["goes_to_quarantine"])}
     return len(expected ^ set(quarantine_ids)) / max(len(ground_truth), 1)
 
@@ -25,7 +25,7 @@ def mdm_error_rate(ground_truth, xref):
 def block_error_rate(ground_truth, xref, targeting, expected, block_reasons):
     """Compara las causales de bloqueo aplicadas con las esperadas según la verdad conocida.
 
-    `expected(info) -> set de reasons`, con info = {"fallecido": bool, "in_validation": bool}
+    `expected(info) -> set de reasons`, con info = {"deceased": bool, "in_validation": bool}
     de la persona real. Solo cuentan las causales de `block_reasons` (las reglas vigentes), así
     no se mezclan con las de focalización. Tasa = filas con causales distintas / filas evaluadas."""
     info = {}

@@ -1,7 +1,7 @@
 # Verificación del entorno: probar en Fabric lo que hasta ahora solo se asumió
 
 **Objetivo:** confirmar en el trial los supuestos de los que depende el resto de la PoC, antes de armar el pipeline.
-Duración estimada: 2 a 3 horas. Resultado: el cuaderno `nb_env_check` deja una tabla OK/FALLA y la prueba de
+Duración estimada: 2 a 3 horas. Resultado: el cuaderno `nb_env_check` deja una tabla OK/FAIL y la prueba de
 aprobación responde G10.
 
 > Repo público: **no** pegar en issues, commits ni PR el ID del tenant, correos ni capturas con datos de la cuenta.
@@ -40,11 +40,11 @@ Abrir `nb_env_check` y ejecutarlo completo. Esperado: **12 OK**. El resultado qu
 
 | Prueba | Si falla, significa |
 |---|---|
-| tablas con nombre de 3 partes | Cambiar todos los `lh_x.schema.table` por la forma que acepte el trial |
+| three-part table names | Cambiar todos los `lh_x.schema.table` por la forma que acepte el trial |
 | userMetadata en DESCRIBE HISTORY | El criterio de auditoría del 100 % necesita otro mecanismo (p. ej. columna `execution_id` en cada tabla) |
-| notebookutils.fs … | Ajustar `nb_e1_bronze`, `nb_06_report`, `nb_07_publish` y `nb_ctl_summary` |
+| notebookutils.fs put/head/cp/ls | Ajustar `nb_e1_bronze`, `nb_06_report`, `nb_07_publish` y `nb_ctl_summary` |
 | runMultiple con DAG | Revisar lakehouse por defecto de los hijos y el timeout por celda |
-| escribir() con columna todo None | Revisar `img_lib.cycle.ddl_types` |
+| write() with an all-None column | Revisar `img_lib.cycle.ddl_types` |
 
 ## 5. Prueba de aprobación (pendiente G10)
 Crear el pipeline `pl_env_check_approval`: Notebook `nb_env_check_child_a` → **Approval** (tipo Outlook 365 o Teams,

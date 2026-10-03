@@ -18,8 +18,8 @@ def match_key(rec: dict):
 
 def build_master(records: list[dict], priority=SOURCE_PRIORITY):
     """`records`: dicts de Plata con `source` e `origin_id`. Devuelve
-    (personas, xref): `people` = lista del maestro con source_winner por atributo;
-    `xref` = (fuente, origin_id) -> person_id."""
+    (people, xref): `people` = lista del maestro con winning_source_by_attribute;
+    `xref` = (source, origin_id) -> person_id."""
     groups = defaultdict(list)
     for r in records:
         groups[match_key(r)].append(r)

@@ -1,4 +1,4 @@
-# nb_approve — PLAN B (tenant sin buzón de M365): el aprobador decide ejecutando este cuaderno; el pipeline espera con Until + Wait + Lookup sobre ctl.approvals. Parámetros: control, decision (APROBADO o RECHAZADO), comentario.
+# nb_approve — PLAN B (tenant sin buzón de M365): el aprobador decide ejecutando este cuaderno; el pipeline espera con Until + Wait + Lookup sobre ctl.approvals. Parámetros: control, decision (APPROVED o REJECTED), comment.
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"
@@ -6,7 +6,7 @@ execution_id = None
 pipeline_run_id = None
 NOTEBOOK_VERSION = "dev"  # se reemplaza por el tag/SHA de git al importar (ver README)
 control = "C1"
-decision = "APPROVED"  # APROBADO o RECHAZADO
+decision = "APPROVED"  # APPROVED o REJECTED
 comment = None
 
 # %% Ejecución

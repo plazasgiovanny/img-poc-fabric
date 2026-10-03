@@ -9,7 +9,7 @@ from .normalize import (
 
 
 def validate_record(rec: dict, today=None):
-    """Normaliza un registro de persona y devuelve (normalized_record, causas).
+    """Normaliza un registro de persona y devuelve (normalized_record, causes).
     `causes` vacío => pasa a Plata; si no, el registro va a quality.quarantine."""
     causes = []
     out = {}

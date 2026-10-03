@@ -6,8 +6,8 @@
   dos fuentes. Los campos siguen la Tabla 7 del documento (nombres de referencia).
 - Inyecta defectos controlados y escribe la "verdad conocida" para medir errores (<1 %, §7 Exp. 2).
 
-Uso local:  python generador.py --n 500 --corte 1 --salida data/
-En Fabric: importar `generate()` y escribir a lh_control/Files/sinteticos/{landing,verdad}."""
+Uso local:  python generator.py --n 500 --cutoff 1 --output data/
+En Fabric: importar `generate()` y escribir a lh_control/Files/synthetic/{landing,ground_truth}."""
 import argparse
 import csv
 import random

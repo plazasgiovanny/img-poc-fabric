@@ -1,11 +1,11 @@
 """Arma output/fabric_package/ con todo lo que hay que subir al trial de Fabric.
 
-    python scripts/prepare_package.py [--n 500] [--semilla 20261002]
+    python scripts/prepare_package.py [--n 500] [--seed 20261002]
 
 Contenido (en orden de uso, ver docs/ENV_CHECK.md):
   1_environment/   .whl de img_lib para el Environment env_img
   2_ddl/           SQL de control y parámetros (ejecutar en lh_control)
-  3_datos/         Files/sinteticos/{landing,verdad}: subir a lh_control > Files
+  3_data/          Files/synthetic/{landing,ground_truth}: subir a lh_control > Files
   4_notebooks/     cuadernos con NOTEBOOK_VERSION = SHA corto de git (trazabilidad del §18)
 Los datos se regeneran con la semilla; output/ está en .gitignore (repo público)."""
 import argparse

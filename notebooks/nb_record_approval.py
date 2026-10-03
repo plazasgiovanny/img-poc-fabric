@@ -1,4 +1,4 @@
-# nb_record_approval — §19: registra la decisión (APROBADO, RECHAZADO o VENCIDO) con aprobador y hora. Parámetros adicionales: control, decision, aprobador, mecanismo, comentario.
+# nb_record_approval — §19: registra la decisión (APPROVED, REJECTED o EXPIRED) con aprobador y hora. Parámetros adicionales: control, decision, approver, mechanism, comment.
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"
@@ -6,7 +6,7 @@ execution_id = None
 pipeline_run_id = None
 NOTEBOOK_VERSION = "dev"  # se reemplaza por el tag/SHA de git al importar (ver README)
 control = "C1"
-decision = "APPROVED"  # APROBADO, RECHAZADO o VENCIDO
+decision = "APPROVED"  # APPROVED, REJECTED o EXPIRED
 approver = None  # si es None, se toma el usuario de la sesión
 mechanism = "approval_activity"
 comment = None

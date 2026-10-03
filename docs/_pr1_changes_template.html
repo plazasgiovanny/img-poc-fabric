@@ -198,7 +198,7 @@ document.querySelectorAll("#diagram1 g[data-cell-id]").forEach(g => {
 });
 showStep("s01");
 
-/* ---- 3. simulador: misma regla que img_lib.controles.all_approved (la última decisión de cada control manda) ---- */
+/* ---- 3. simulador: misma regla que img_lib.controls.all_approved (la última decisión de cada control manda) ---- */
 const CONTROLS = [["C1","Líder de datos"],["C2","Analista líder"],["C3","Líder funcional de transferencias"],["C4","Responsable del programa"]];
 const state = { C1:"APPROVED", C2:"APPROVED", C3:"PENDING", C4:"PENDING" };
 const rowsEl = document.getElementById("sim_rows"), verdictEl = document.getElementById("verdict");

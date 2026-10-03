@@ -29,5 +29,5 @@ nuevo por corrida (p. ej. `2026-09-r1`): repetirlo duplica filas.
   `Lookup` sobre `ctl.aprobaciones` hasta que exista una decisión distinta de `PENDIENTE` para ese control;
   el timeout del `Until` es el plazo. El aprobador ejecuta `nb_aprobar`. Si vence, se registra `VENCIDO`.
 
-**Verificar en el spike del día 1** (G10): si la salida de la actividad *Approval* trae aprobador y hora; si no,
+**Verificar con `nb_env_check`** (G10): si la salida de la actividad *Approval* trae aprobador y hora; si no,
 tomarlos de Monitoring Hub > Review.

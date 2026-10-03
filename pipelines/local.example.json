@@ -1,0 +1,10 @@
+{
+    "workspace_id": "<id del workspace IMG_PoC>",
+    "approvers": "<correo del aprobador>",
+    "teams_chat_id": "<id del chat de Teams donde llega la aprobación>",
+    "teams_connection_id": "<id de la conexión de Teams en Fabric>",
+    "notebook_ids": {
+        "nb_env_check_child_a": "<id del cuaderno>",
+        "nb_env_check_child_b": "<id del cuaderno>"
+    }
+}

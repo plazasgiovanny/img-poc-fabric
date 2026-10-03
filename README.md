@@ -18,7 +18,7 @@ Ingreso Mínimo Garantizado (IMG), SDIS Bogotá* (documento `Caso_Analisis_IMG_A
 | `notebooks/` | Cuadernos de Fabric exportados como `.py` (celdas `# %%`) |
 | `ddl/` | Esquemas `ctl.*` y `param.*` y parámetros ilustrativos |
 | `generator/` | Generador determinista de datos sintéticos con defectos inyectados y verdad conocida |
-| `pipelines/` | JSON exportado de `pl_img_cycle` (cuando exista) |
+| `pipelines/` | Inventario de pipelines, plantillas JSON sin IDs (`scripts/pipeline_tool.py` las rellena) y guía de `pl_img_cycle` |
 | `tests/` | pytest de la lógica pura (normalización, MDM contra la verdad, bitácora, generador) |
 | `docs/` | Pendientes, decisiones y evidencias |
 

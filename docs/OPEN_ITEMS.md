@@ -14,5 +14,5 @@ un placeholder parametrizado con `is_illustrative = 1`, visible en el informe de
 | G7 | Estructura del listado por operador | Columnas de la Tabla 7 | Compañero |
 | G8 | Plazo y canal de cada control | 30 min en la demo | Equipo |
 | G9 | Orden de dependencias entre cuadernos (el §23 lo marca como supuesto) | El de la Tabla 8 | Equipo |
-| G10 | ¿El output de la Approval activity incluye aprobador y hora? | Se verifica con nb_env_check | Plataforma |
+| G10 | ¿El output de la Approval activity incluye aprobador y hora? | En curso: la actividad existe y espera; el rechazo falla con `Your request is rejected.` Falta la salida de una aprobación y el vencimiento (ver `pipelines/INVENTORY.md`) | Plataforma |
 | G11 | Costo operativo por ciclo (Tabla 4) | CU·s × precio de lista, declarado como estimado | Equipo |

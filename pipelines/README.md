@@ -1,5 +1,7 @@
 # Pipeline `pl_img_cycle`
 
+> Inventario de pipelines, plantillas JSON sin IDs y la herramienta para generarlos: [`INVENTORY.md`](INVENTORY.md).
+
 El pipeline se arma en el portal de Fabric (Data Factory) y se exporta aquí como JSON
 (`pl_img_cycle.json`) cuando esté probado. Esta guía fija la estructura que debe tener (§18.3 y §19).
 

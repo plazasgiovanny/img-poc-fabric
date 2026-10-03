@@ -1,0 +1,88 @@
+{
+    "name": "pl_env_check_approval",
+    "properties": {
+        "activities": [
+            {
+                "name": "NotebookA",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_env_check_child_a}}",
+                    "workspaceId": "{{WORKSPACE_ID}}"
+                }
+            },
+            {
+                "name": "Approval1",
+                "type": "Approval",
+                "dependsOn": [
+                    {
+                        "activity": "NotebookA",
+                        "dependencyConditions": ["Succeeded"]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.00:10:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "operationType": "ApprovalGroupChatMessage",
+                    "approvers": "{{APPROVERS}}",
+                    "approvalRequestTitle": "Aprobacion",
+                    "description": "se aprueba el flujo de env check",
+                    "chatId": "{{TEAMS_CHAT_ID}}"
+                },
+                "externalReferences": {
+                    "connection": "{{TEAMS_CONNECTION_ID}}"
+                }
+            },
+            {
+                "name": "NotebookB",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Approval1",
+                        "dependencyConditions": ["Succeeded"]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_env_check_child_b}}",
+                    "workspaceId": "{{WORKSPACE_ID}}"
+                }
+            },
+            {
+                "name": "Fail",
+                "type": "Fail",
+                "dependsOn": [
+                    {
+                        "activity": "Approval1",
+                        "dependencyConditions": ["Failed"]
+                    }
+                ],
+                "typeProperties": {
+                    "message": {
+                        "value": "@activity('Approval1').error.message",
+                        "type": "Expression"
+                    },
+                    "errorCode": "500"
+                }
+            }
+        ]
+    }
+}

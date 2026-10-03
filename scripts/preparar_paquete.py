@@ -2,7 +2,7 @@
 
     python scripts/preparar_paquete.py [--n 500] [--semilla 20261002]
 
-Contenido (en orden de uso, ver docs/SPIKE_DIA1.md):
+Contenido (en orden de uso, ver docs/ENV_CHECK.md):
   1_environment/   .whl de img_lib para el Environment env_img
   2_ddl/           SQL de control y parámetros (ejecutar en lh_control)
   3_datos/         Files/sinteticos/{landing,verdad}: subir a lh_control > Files

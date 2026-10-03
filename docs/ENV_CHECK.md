@@ -1,7 +1,7 @@
-# Spike del día 1: probar en Fabric lo que hasta ahora solo se asumió
+# Verificación del entorno: probar en Fabric lo que hasta ahora solo se asumió
 
 **Objetivo:** confirmar en el trial los supuestos de los que depende el resto de la PoC, antes de armar el pipeline.
-Duración estimada: 2 a 3 horas. Resultado: el cuaderno `nb_spike_dia1` deja una tabla OK/FALLA y la prueba de
+Duración estimada: 2 a 3 horas. Resultado: el cuaderno `nb_env_check` deja una tabla OK/FALLA y la prueba de
 aprobación responde G10.
 
 > Repo público: **no** pegar en issues, commits ni PR el ID del tenant, correos ni capturas con datos de la cuenta.
@@ -34,9 +34,9 @@ aprobación responde G10.
    parámetros como **parameter cell** (menú de la celda > Toggle parameter cell). Sin esto, los argumentos de
    `runMultiple` y del pipeline no sobrescriben las variables.
 
-## 4. Ejecutar el spike
-Abrir `nb_spike_dia1` y ejecutarlo completo. Esperado: **12 OK**. El resultado queda en pantalla y en
-`lh_control > Files/spike_resultado.json`.
+## 4. Ejecutar nb_env_check
+Abrir `nb_env_check` y ejecutarlo completo. Esperado: **12 OK**. El resultado queda en pantalla y en
+`lh_control > Files/env_check_result.json`.
 
 | Prueba | Si falla, significa |
 |---|---|
@@ -47,8 +47,8 @@ Abrir `nb_spike_dia1` y ejecutarlo completo. Esperado: **12 OK**. El resultado q
 | escribir() con columna todo None | Revisar `img_lib.ciclo.ddl_tipos` |
 
 ## 5. Prueba de aprobación (pendiente G10)
-Crear el pipeline `pl_spike_aprobacion`: Notebook `nb_spike_hijo_a` → **Approval** (tipo Outlook 365 o Teams,
-timeout 5 min) → en éxito, Notebook `nb_spike_hijo_b`; en fallo, actividad **Fail**.
+Crear el pipeline `pl_env_check_approval`: Notebook `nb_env_check_child_a` → **Approval** (tipo Outlook 365 o Teams,
+timeout 5 min) → en éxito, Notebook `nb_env_check_child_b`; en fallo, actividad **Fail**.
 Ejecutar tres veces y anotar lo que se ve en **Monitoring hub**:
 
 | Escenario | Qué anotar |
@@ -63,7 +63,7 @@ Ejecutar tres veces y anotar lo que se ve en **Monitoring hub**:
 ## 6. Qué reportar
 Pegar en el chat (sin IDs de tenant ni correos):
 - Capacidad (F4/F64) y si el trial se activó con la cuenta institucional.
-- La tabla de resultados del spike (o el JSON).
+- La tabla de resultados de nb_env_check (o el JSON).
 - Resultado de los tres escenarios de aprobación y los campos del Output.
 - Cualquier mensaje de error completo.
 

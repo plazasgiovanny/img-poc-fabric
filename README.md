@@ -29,7 +29,7 @@ Ingreso Mínimo Garantizado (IMG), SDIS Bogotá* (documento `Caso_Analisis_IMG_A
 | Cadena lógica completa sobre datos sintéticos (`tests/test_e2e.py`) | Hecho: error <1 % a 500 y a 5.000 registros |
 | Generador sintético | Hecho (esquema **provisional**, PENDIENTE G2) |
 | DDL `ctl/param` + parámetros ilustrativos | Hecho |
-| Cuadernos (Etapas 1 a 3, controles, orquestadores `runMultiple`) | Escritos y con sintaxis verificada, **sin ejecutar en Fabric** (spike día 1) |
+| Cuadernos (Etapas 1 a 3, controles, orquestadores `runMultiple`) | Escritos y con sintaxis verificada, **sin ejecutar en Fabric** (falta correr `nb_env_check`) |
 | Pipeline `pl_img_ciclo` con 4 aprobaciones | Guía en `pipelines/README.md`; se arma en el portal y se exporta |
 
 Desviaciones deliberadas respecto del documento (ver `docs/PENDIENTES.md`): un solo workspace con 4 lakehouses,
@@ -45,7 +45,7 @@ python generador/generador.py --n 500 --corte 1 --salida data   # data/ está en
 ```
 
 ## Despliegue en el trial de Fabric (resumen)
-Primero, el spike: [`docs/SPIKE_DIA1.md`](docs/SPIKE_DIA1.md). El paquete para subir se arma con
+Primero, la verificación del entorno: [`docs/ENV_CHECK.md`](docs/ENV_CHECK.md). El paquete para subir se arma con
 `python scripts/preparar_paquete.py` (genera `salida/paquete_fabric/`, ignorado por git).
 
 1. Crear workspace `IMG_PoC` y 4 lakehouses con schemas: `lh_bronce`, `lh_plata`, `lh_oro`, `lh_control`

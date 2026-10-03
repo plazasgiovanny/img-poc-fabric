@@ -60,6 +60,10 @@
 const REPO = "https://github.com/plazasgiovanny/img-poc-fabric";
 
 const EVENTS = [
+  { date:"2026-10-03", status:"done", title:"PR #7 mergeado: G10 cerrado en la documentación",
+    detail:"Resultados de las tres corridas de la aprobación y criterio para registrar al aprobador (aprobador designado y hora con utcNow()).", pr:7, commit:"a2bda0c" },
+  { date:"2026-10-03", status:"done", title:"PR #6 mergeado: inventario de pipelines",
+    detail:"Plantilla JSON de pl_env_check_approval sin IDs de entorno y scripts/pipeline_tool.py (render y templatize); un test impide que las plantillas filtren GUIDs o correos.", pr:6, commit:"532cbea", link:"../pipelines/INVENTORY.md" },
   { date:"2026-10-03", status:"done", title:"G10 cerrado: la aprobación humana funciona (plan A)",
     detail:"Aprobada, rechazada y vencida probadas en Fabric y distinguibles por el mensaje; la plantilla JSON se importó sin cambios. La salida no trae quién aprobó: se registra el aprobador designado. La actividad está en vista previa; el plan B queda de respaldo.", link:"../pipelines/INVENTORY.md" },
   { date:"2026-10-03", status:"done", title:"Verificación del entorno: 13 de 13 pruebas OK en Fabric",
@@ -68,8 +72,8 @@ const EVENTS = [
     detail:"La actividad Approval existe, espera la decisión y un rechazo la hace fallar con un mensaje legible. Los pipelines se versionan ahora como plantillas JSON sin IDs de entorno.", link:"../pipelines/INVENTORY.md" },
   { date:"2026-10-03", status:"done", title:"PR #3 y #4 mergeados tras revisión independiente",
     detail:"Tres revisores en paralelo (equivalencia de comportamiento, consistencia de cuadernos/DDL, integridad de docs y HTML) dieron OK con observaciones; las referencias desactualizadas se corrigieron antes del merge.", pr:4, commit:"edac5ea" },
-  { date:"2026-10-03", status:"doing", title:"Arreglo de la bitácora (run_log.record)",
-    detail:"Los revisores señalaron que record() crea el DataFrame sin esquema y podía fallar en la primera ejecución en Fabric. Corregido con pruebas; pendiente de revisión en el PR #5.", pr:5 },
+  { date:"2026-10-03", status:"done", title:"PR #5 mergeado: arreglo de la bitácora (run_log.record)",
+    detail:"Los revisores señalaron que record() creaba el DataFrame sin esquema y podía fallar en la primera ejecución en Fabric. Se corrigió con pruebas con Spark simulado y la prueba 6 de nb_env_check lo confirmó en Fabric.", pr:5, commit:"505dcc9" },
   { date:"2026-10-03", status:"done", title:"Código, archivos y datos en inglés",
     detail:"Barrido de todo el repo: archivos, módulos, funciones, variables, tablas, columnas y valores en inglés; solo comentarios y documentación siguen en español. Glosario con la correspondencia al documento en docs/NAMING.md.", link:"NAMING.md" },
   { date:"2026-10-03", status:"done", title:"PR #1 mergeado a main",
@@ -95,11 +99,13 @@ const EVENTS = [
 ];
 
 const NEXT_UP = [
-  { status:"doing", title:"Verificación del entorno en el trial de Fabric", detail:"Preparado; falta ejecutarlo en el trial. Ver docs/ENV_CHECK.md: nombres de tablas, runMultiple, notebookutils y aprobación humana (G10)." },
-  { status:"pending", title:"Insumos del compañero (G2 a G7)", detail:"Las 2 fuentes y su diccionario, focalización, reglas de bloqueo, titular y listado del operador." },
-  { status:"pending", title:"Pipeline pl_img_cycle en el portal", detail:"Armar con las 4 aprobaciones y exportar el JSON a pipelines/." },
+  { status:"doing", title:"Insumos de Jhon (G2 a G7)", detail:"Se le pidieron las 2 fuentes y su diccionario, focalización, 1 o 2 reglas de bloqueo con causal, regla de titular, estructura del listado y regla del MDM. Con ellos se reemplazan los parámetros ilustrativos y se construye la capa de mapeo de nombres reales a internos (aún no existe)." },
+  { status:"pending", title:"Importar los 23 cuadernos reales a Fabric", detail:"Solo nb_env_check* están importados. Duda abierta: si Fabric parte los .py en celdas por # %%; si no, generar .ipynb en el paquete. Cada cuaderno: lakehouse por defecto, Environment y celda de parámetros marcada." },
+  { status:"pending", title:"Generar pl_img_cycle", detail:"20 actividades, 4 controles y parámetros, con un script desde la definición del DAG. Falta saber cómo espera Fabric los parámetros de TridentNotebook (se necesita un JSON exportado con un cuaderno parametrizado).", link:"../pipelines/README.md" },
+  { status:"pending", title:"Automatizar la importación de pipelines", detail:"Crear o importar pipelines en Fabric por importación o API para reducir el factor humano." },
+  { status:"pending", title:"Línea base manual (G1)", detail:"Horas por ciclo del proceso manual, para medir la reducción de tiempo ≥30 %. Aún no se ha pedido." },
   { status:"pending", title:"Corridas medidas del Experimento 2", detail:"3 corridas de 500 registros para la Tabla 4; opcional, 5.000 para el Experimento 3." },
-  { status:"pending", title:"Actualizar el documento v2", detail:"§7, §13, §15, §16, §18, §19, §23 y Tabla 4." },
+  { status:"pending", title:"Actualizar el documento v2", detail:"§7, §13, §15, §16, §18, §19, §23, Tabla 4, Anexo A y ética. El .docx lo edita el equipo; aquí solo se redacta el borrador." },
 ];
 
 const LABELS = { done:"hecho", doing:"en curso", pending:"pendiente" };

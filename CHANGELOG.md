@@ -9,3 +9,5 @@
 - `cycle.write` usa el esquema de la tabla existente y `run_log.record` lo reutiliza (columnas con None); `nb_ctl_summary` tolera la ausencia de la tabla de cuarentena; nueva prueba en `nb_env_check`.
 - Inventario de pipelines (`pipelines/INVENTORY.md`), plantilla de `pl_env_check_approval` sin IDs y `scripts/pipeline_tool.py` (render / templatize).
 - G10 cerrado: resultados de las tres corridas de la aprobación y criterio para registrar al aprobador (`pipelines/INVENTORY.md`).
+- Verificación en Fabric (3 de octubre de 2026): `nb_env_check` 13 de 13 OK, DDL aplicado desde un cuaderno y aprobación humana probada con `pl_env_check_approval`.
+- Documentación al día con lo verificado: `docs/ENV_CHECK.md` (guía corregida, resultado y errores), `README.md`, `docs/OPEN_ITEMS.md`, `pipelines/README.md`, `docs/timeline.html` y `docs/NAMING.md` (convención de pipelines y plantillas). `docs/pr1_changes.html` queda marcado como documento histórico.

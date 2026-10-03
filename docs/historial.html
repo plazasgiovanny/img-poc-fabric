@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historial PoC IMG</title>
+<style>
+  :root{
+    --bg:#fafafa; --fg:#1b1f23; --muted:#6a737d; --line:#e1e4e8;
+    --done:#1a7f4b; --doing:#b7791f; --todo:#9aa3ab; --accent:#0b6e7a;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --bg:#111418; --fg:#e6e9ec; --muted:#8b949e; --line:#262c33;
+    --done:#4cc38a; --doing:#e3b341; --todo:#6b747d; --accent:#55c3d0;
+  }}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+       padding:32px 16px 64px}
+  main{max-width:720px;margin:0 auto}
+  h1{font-size:1.4rem;margin:0 0 4px;font-weight:600}
+  .sub{color:var(--muted);margin:0 0 20px}
+  .resumen{display:flex;gap:20px;flex-wrap:wrap;padding:12px 0;margin-bottom:8px;border-block:1px solid var(--line);
+           font:13px ui-monospace,Consolas,monospace;color:var(--muted)}
+  .resumen b{color:var(--fg);font-weight:600}
+  h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:28px 0 10px;font-weight:600}
+  ol{list-style:none;margin:0;padding:0;border-left:1px solid var(--line)}
+  li{position:relative;padding:0 0 18px 20px}
+  li::before{content:"";position:absolute;left:-5px;top:7px;width:9px;height:9px;border-radius:50%;
+             background:var(--todo);outline:3px solid var(--bg)}
+  li.hecho::before{background:var(--done)}
+  li.curso::before{background:var(--doing)}
+  .fecha{font:12px ui-monospace,Consolas,monospace;color:var(--muted)}
+  .titulo{font-weight:600}
+  .det{color:var(--muted);margin:2px 0 0}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;font:12px ui-monospace,Consolas,monospace}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tag{color:var(--muted)}
+  .vacio{color:var(--muted)}
+  @media (prefers-reduced-motion:no-preference){li{transition:opacity .2s}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Historial PoC IMG en Fabric</h1>
+  <p class="sub">Avances del proyecto, del más reciente al más antiguo. Repositorio: <a id="repo" href="#" target="_blank" rel="noopener"></a></p>
+  <div class="resumen" id="resumen"></div>
+
+  <h2>Próximo</h2>
+  <ol id="proximo"></ol>
+
+  <h2>Avances</h2>
+  <ol id="avances"></ol>
+</main>
+
+<script>
+/* Para registrar un avance: agregar un objeto al inicio de EVENTOS (los más recientes primero).
+   estado: "hecho" | "curso" | "pendiente"   ·   commit: SHA corto opcional   ·   pr: número opcional   ·   enlace: URL opcional */
+const REPO = "https://github.com/plazasgiovanny/img-poc-fabric";
+
+const EVENTOS = [
+  { fecha:"2026-10-03", estado:"hecho", titulo:"Repositorio público y PR #1 abiertos",
+    detalle:"Repo creado con gh; main y feature/etapas-2-3 publicadas. El PR queda para revisión del equipo.", pr:1 },
+  { fecha:"2026-10-03", estado:"hecho", titulo:"Historial de avances",
+    detalle:"Este archivo (docs/historial.html), sin dependencias; se actualiza con cada avance." },
+  { fecha:"2026-10-02", estado:"hecho", titulo:"Etapas 2 y 3, controles, métricas, DAG y cuadernos",
+    detalle:"Cruces, liquidación mínima, 4 controles, orquestadores runMultiple y guía del pipeline. 22 pruebas en verde; error <1 % a 500 y 5.000 registros sintéticos. Sin ejecutar en Fabric.", commit:"c4d81da" },
+  { fecha:"2026-10-02", estado:"hecho", titulo:"Estructura inicial y Etapa 1",
+    detalle:"img_lib, generador sintético con verdad conocida, DDL de control y parámetros ilustrativos, cuadernos de Bronce, Plata, MDM y Oro, CI.", commit:"ae18b61" },
+  { fecha:"2026-10-02", estado:"hecho", titulo:"Propuesta de la PoC publicada",
+    detalle:"Alcance, arquitectura, cronograma de 7 días, riesgos y pendientes para el equipo.", enlace:"https://claude.ai/artifact/Bi81eogZdjonv6j8WDsLvv" },
+  { fecha:"2026-10-02", estado:"hecho", titulo:"Plan aprobado",
+    detalle:"Datos sintéticos, 2 fuentes, MDM, publicación en OneLake, plazo de 1 semana y demo con métricas del Experimento 2. Trial, aprobación humana, runMultiple y Environments verificados en la documentación de Microsoft." },
+  { fecha:"2026-10-02", estado:"hecho", titulo:"Documento v2 analizado",
+    detalle:"13 fuentes, 4 controles, Tablas 7 a 9. «MBM» no aparece en el documento: se interpretó como MDM." },
+];
+
+const PROXIMO = [
+  { estado:"curso",     titulo:"Revisión del PR #1", detalle:"Revisión cruzada antes de hacer merge a main." },
+  { estado:"pendiente", titulo:"Spike en el trial de Fabric (día 1)", detalle:"Nombres de tablas entre lakehouses, runMultiple, notebookutils, aprobación humana (G10)." },
+  { estado:"pendiente", titulo:"Insumos del compañero (G2 a G7)", detalle:"Las 2 fuentes y su diccionario, focalización, reglas de bloqueo, titular y listado del operador." },
+  { estado:"pendiente", titulo:"Pipeline pl_img_ciclo en el portal", detalle:"Armar con las 4 aprobaciones y exportar el JSON a pipelines/." },
+  { estado:"pendiente", titulo:"Corridas medidas del Experimento 2", detalle:"3 corridas de 500 registros para la Tabla 4; opcional, 5.000 para el Experimento 3." },
+  { estado:"pendiente", titulo:"Actualizar el documento v2", detalle:"§7, §13, §15, §16, §18, §19, §23 y Tabla 4." },
+];
+
+const ETQ = { hecho:"hecho", curso:"en curso", pendiente:"pendiente" };
+const fmt = f => new Date(f + "T00:00:00").toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" });
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+function item(e){
+  const enlaces = [];
+  if (e.commit) enlaces.push(`<a href="${REPO}/commit/${esc(e.commit)}" target="_blank" rel="noopener">commit ${esc(e.commit)}</a>`);
+  if (e.pr) enlaces.push(`<a href="${REPO}/pull/${e.pr}" target="_blank" rel="noopener">PR #${e.pr}</a>`);
+  if (e.enlace) enlaces.push(`<a href="${esc(e.enlace)}" target="_blank" rel="noopener">enlace</a>`);
+  return `<li class="${e.estado}">
+    <div class="fecha">${e.fecha ? fmt(e.fecha) + " · " : ""}<span class="tag">${ETQ[e.estado]}</span></div>
+    <div class="titulo">${esc(e.titulo)}</div>
+    <p class="det">${esc(e.detalle || "")}</p>
+    ${enlaces.length ? `<div class="meta">${enlaces.join("")}</div>` : ""}
+  </li>`;
+}
+
+const repo = document.getElementById("repo");
+repo.href = REPO; repo.textContent = REPO.replace("https://github.com/", "");
+document.getElementById("avances").innerHTML = EVENTOS.map(item).join("");
+document.getElementById("proximo").innerHTML = PROXIMO.map(item).join("");
+
+const cuenta = e => EVENTOS.filter(x => x.estado === e).length;
+document.getElementById("resumen").innerHTML =
+  `<span><b>${cuenta("hecho")}</b> avances</span>` +
+  `<span><b>${PROXIMO.filter(x => x.estado === "curso").length}</b> en curso</span>` +
+  `<span><b>${PROXIMO.filter(x => x.estado === "pendiente").length}</b> pendientes</span>` +
+  `<span>último: <b>${fmt(EVENTOS[0].fecha)}</b></span>`;
+</script>
+</body>
+</html>

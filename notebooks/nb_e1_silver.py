@@ -30,7 +30,7 @@ for source in ("population", "validation"):
                                "cause": ";".join(causes), "value": str(r.get("doc_number")),
                                "execution_id": EXEC_ID})
             continue
-        key = (rec["doc_type"], rec["doc_number"], rec["first_names"], rec["last_names"], rec["birth_date"])
+        key = (rec["doc_type"], rec["doc_number"], rec["first_names"], rec["last_names"], rec.get("birth_date"))
         if key in seen:  # duplicado exacto dentro de la fuente
             dup_errors += 1
             continue

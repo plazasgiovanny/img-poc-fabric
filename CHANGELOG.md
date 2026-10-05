@@ -12,3 +12,4 @@
 - Verificación en Fabric (3 de octubre de 2026): `nb_env_check` 13 de 13 OK, DDL aplicado desde un cuaderno y aprobación humana probada con `pl_env_check_approval`.
 - Documentación al día con lo verificado: `docs/ENV_CHECK.md` (guía corregida, resultado y errores), `README.md`, `docs/OPEN_ITEMS.md`, `pipelines/README.md`, `docs/timeline.html` y `docs/NAMING.md` (convención de pipelines y plantillas). `docs/pr1_changes.html` queda marcado como documento histórico.
 - `scripts/notebook_tool.py`: los cuadernos se empaquetan como `.ipynb` con celdas separadas y celda de parámetros etiquetada (el importador de `.py` de Fabric los dejaba en una sola celda); `prepare_package.py` lo usa y nueva prueba `tests/test_notebooks.py`. Avanza la fase 3 del issue #8.
+- Primera corrida de `nb_orch_e1` en Fabric: `nb_e1_silver` fallaba con `KeyError: 'birth_date'` porque la fuente de validación no trae esa columna; la clave de duplicados usa `rec.get`.

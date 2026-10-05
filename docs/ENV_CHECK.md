@@ -55,11 +55,14 @@ En `lh_control` > Files, subir la carpeta `3_data/Files/synthetic` (queda `Files
 `Files/synthetic/ground_truth/…`). `ground_truth` nunca la lee el pipeline; solo sirve para medir errores.
 
 ### 4. Importar y configurar los cuadernos
-1. Workspace > Import > Notebook: subir los archivos de `4_notebooks/` (traen la versión de git en `NOTEBOOK_VERSION`).
+1. Workspace > Import > Notebook: subir los `.ipynb` de `4_notebooks/` (traen la versión de git en `NOTEBOOK_VERSION`).
+   Se importan como `.ipynb` porque el importador de `.py` de Fabric ignora los `# %%` y deja todo en una sola celda;
+   en el `.ipynb` la celda de parámetros ya va separada y etiquetada como *parameters* (`scripts/notebook_tool.py`).
+   Si ya importaste los `.py`, bórralos y reimporta.
    Hoy solo `nb_env_check`, `nb_env_check_child_a` y `nb_env_check_child_b` se han importado; los otros 23 no
    (ver [`OPEN_ITEMS.md`](OPEN_ITEMS.md), pendiente de importación).
-2. En **cada** cuaderno: lakehouse por defecto = `lh_control`; Environment = `env_img`; marcar la primera celda de
-   parámetros como **parameter cell**. Sin esto, los argumentos de `runMultiple` y del pipeline no sobrescriben las
+2. En **cada** cuaderno: lakehouse por defecto = `lh_control`; Environment = `env_img`; verificar que la primera celda
+   lleve la etiqueta **Parameters** (viene puesta). Sin esto, los argumentos de `runMultiple` y del pipeline no sobrescriben las
    variables.
 3. Los cuadernos **hijos** de `runMultiple` necesitan el **mismo lakehouse por defecto** que el padre.
 

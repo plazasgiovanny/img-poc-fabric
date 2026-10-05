@@ -15,7 +15,7 @@ Ingreso Mínimo Garantizado (IMG), SDIS Bogotá* (documento `Caso_Analisis_IMG_A
 | Carpeta | Contenido |
 |---|---|
 | `img_lib/` | Biblioteca común (`.whl` para el Environment `env_img`): normalización, MDM, bitácora, parámetros vigentes, huella SHA-256 |
-| `notebooks/` | 26 cuadernos de Fabric exportados como `.py` (celdas `# %%`): 23 de la cadena y 3 de verificación del entorno |
+| `notebooks/` | 26 cuadernos de Fabric como `.py` (celdas `# %%`; el paquete los convierte a `.ipynb`): 23 de la cadena y 3 de verificación del entorno |
 | `ddl/` | Esquemas `ctl.*` y `param.*` y parámetros ilustrativos (Spark SQL) |
 | `generator/` | Generador determinista de datos sintéticos con defectos inyectados y verdad conocida |
 | `scripts/` | `prepare_package.py` (arma el paquete para subir a Fabric) y `pipeline_tool.py` (genera pipelines desde plantillas) |

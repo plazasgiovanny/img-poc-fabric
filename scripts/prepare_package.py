@@ -6,10 +6,9 @@ Contenido (en orden de uso, ver docs/ENV_CHECK.md):
   1_environment/   .whl de img_lib para el Environment env_img
   2_ddl/           SQL de control y parámetros (ejecutar en lh_control)
   3_data/          Files/synthetic/{landing,ground_truth}: subir a lh_control > Files
-  4_notebooks/     cuadernos con NOTEBOOK_VERSION = SHA corto de git (trazabilidad del §18)
+  4_notebooks/     cuadernos .ipynb (celdas separadas, celda de parámetros etiquetada) con NOTEBOOK_VERSION = SHA corto de git (trazabilidad del §18)
 Los datos se regeneran con la semilla; output/ está en .gitignore (repo público)."""
 import argparse
-import re
 import shutil
 import subprocess
 import sys
@@ -17,6 +16,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "generator"))
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+import notebook_tool  # noqa: E402
+
 import generator  # noqa: E402
 
 
@@ -53,9 +55,7 @@ def main():
     (destination / "4_notebooks").mkdir(parents=True)
     n = 0
     for f in sorted((REPO_ROOT / "notebooks").glob("*.py")):
-        txt = f.read_text(encoding="utf-8")
-        txt, k = re.subn(r'NOTEBOOK_VERSION = "dev"', f'NOTEBOOK_VERSION = "{view}"', txt)
-        (destination / "4_notebooks" / f.name).write_text(txt, encoding="utf-8")
+        notebook_tool.write(f, destination / "4_notebooks", {'NOTEBOOK_VERSION = "dev"': f'NOTEBOOK_VERSION = "{view}"'})
         n += 1
     print(f"package at {destination}\n  version: {view}\n  notebooks: {n}\n  records per source (cutoff 1): "
           f"{sum(1 for _ in open(destination / '3_data/Files/synthetic/landing/cutoff1/population.csv', encoding='utf-8')) - 1}")

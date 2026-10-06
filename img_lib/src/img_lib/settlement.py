@@ -57,6 +57,9 @@ def _derived(member, eligible, criterion):
     if criterion == "is_banked":
         return int(str(member.get("banked")) == "1")
     value = member.get(criterion)
+    if criterion == "doc_number" and value is not None:  # numérico si se puede ("99999" antes que "100000")
+        number = mapping.to_int(value)
+        return (0, number) if number is not None else (1, str(value))
     return int(value) if criterion == "age" and value is not None else value
 
 

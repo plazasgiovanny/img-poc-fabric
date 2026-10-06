@@ -162,3 +162,10 @@ def test_ddl_param_script_matches_python_mirror():
     for row in ill.BLOCK_RULES:
         assert f"'{row['rule_id']}'" in sql and f"'{row['reason']}'" in sql
     assert "'NOT IN', '0,12'" in sql and "120000.0" in sql and "'1. SISBEN IV - A'" in sql
+
+
+def test_document_number_tiebreak_is_numeric_not_lexicographic():
+    members = [person("P1", doc="100000"), person("P2", doc="99999")]
+    assert holders(members) == {"H1": "P2"}  # 99999 < 100000, aunque como texto "100000" < "99999"
+    members = [person("P1", doc="B123"), person("P2", doc="A456")]  # no numéricos: por cadena
+    assert holders(members) == {"H1": "P2"}

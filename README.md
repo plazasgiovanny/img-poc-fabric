@@ -20,7 +20,7 @@ reproducibilidad (misma semilla, mismos datos) y menos pasos manuales entre la f
 | Carpeta | Contenido |
 |---|---|
 | `img_lib/` | Biblioteca común (`.whl` para el Environment `env_img`): normalización, MDM, bitácora, parámetros vigentes, huella SHA-256 |
-| `notebooks/` | 26 cuadernos de Fabric como `.py` (celdas `# %%`; el paquete los convierte a `.ipynb`): 23 de la cadena y 3 de verificación del entorno |
+| `notebooks/` | 27 cuadernos de Fabric como `.py` (celdas `# %%`; el paquete los convierte a `.ipynb`): 23 de la cadena, 3 de verificación del entorno y `nb_measure` (mide un ciclo para el Experimento 2: tiempos, embudo, calidad contra la verdad conocida, trazabilidad; guarda `Files/measurements/<cycle_id>.json` en `lh_control`, solo lee; lógica en `img_lib.measure`) |
 | `ddl/` | Esquemas `ctl.*` y `param.*` y parámetros ilustrativos (Spark SQL) |
 | `generator/` | Generador determinista de datos sintéticos con defectos inyectados y verdad conocida |
 | `scripts/` | `prepare_package.py` (arma el paquete para subir a Fabric) y `pipeline_tool.py` (genera pipelines desde plantillas) |

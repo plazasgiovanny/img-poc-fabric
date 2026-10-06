@@ -9,5 +9,8 @@ description = "Biblioteca común de la PoC IMG en Microsoft Fabric (caso de aná
 requires-python = ">=3.10"
 dependencies = []
 
+[project.optional-dependencies]
+xlsx = ["openpyxl>=3.1"]  # listados .xlsx
+
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,4 +1,4 @@
-# nb_01_holder — Tabla 8: un titular por hogar según param.holder_rule (orden de criterios parametrizado, PENDIENTE G5).
+# nb_01_holder — Tabla 8: un titular por hogar según param.holder_rule (adulta, no bloqueada, mujer, bancarizada; desempate por edad y documento).
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"

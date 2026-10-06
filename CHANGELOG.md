@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Sin publicar]
+- Esquema real de las fuentes (diccionarios de la base maestra y de dispersión): `img_lib.mapping` (RSH_* a nombres internos y catálogos), generador con `RSH_*`/`SIS_*` y base de inhumados (CSV `||`), `nb_e1_bronze`/`nb_e1_silver` adaptados, reglas de focalización (`RSH_grupo_S4`), bloqueo `NOT IN` por RENEC y por inhumados, titular según criterios ordenados, operador de la cuenta, listado `.xlsx` de 32 columnas por operador (`img_lib.dispersal`), métrica de titulares, `ddl/02` repetible, CI con `openpyxl`. Decisiones de diseño en `docs/DESIGN_DECISIONS.md`; G2-G7 cerrados, G6 y G9 parciales.
 - Estructura inicial del repo, `img_lib` 0.1.0, generador sintético, DDL de control/parámetros,
   cuadernos de la Etapa 1 y CI.
 - Etapas 2 y 3: cruces, liquidación mínima, controles, DAG, métricas, cuadernos y guía del pipeline.

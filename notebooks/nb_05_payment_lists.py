@@ -1,4 +1,4 @@
-# nb_05_payment_lists — Tabla 8: sábana del ciclo (archivos por operador y fuente se generan al publicar).
+# nb_05_payment_lists — Tabla 8: sábana del ciclo (los .xlsx por operador se generan al publicar).
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"

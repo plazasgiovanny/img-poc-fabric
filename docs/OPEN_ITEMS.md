@@ -1,21 +1,20 @@
 # Pendientes y supuestos (no se asumen)
 
-Estado al 3 de octubre de 2026. «Pedido a Jhon» = el compañero que tiene la fuente recibió la solicitud por escrito; no hay respuesta registrada aquí.
+Estado al 5 de octubre de 2026. «Pedido a Jhon» = el compañero que tiene la fuente recibió la solicitud por escrito; no hay respuesta registrada aquí.
 
-Nada de lo siguiente está definido en el documento v2 ni lo ha confirmado el equipo. Mientras tanto la PoC usa
-un placeholder parametrizado con `is_illustrative = 1`, visible en el informe de generación.
+La PoC ya trabaja con el esquema real de las fuentes (diccionarios y reglas entregados por Jhon). El detalle fino de las reglas está en [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md); `is_illustrative = 1` queda solo en valores de demostración.
 
 | ID | Pendiente | Placeholder actual | Quién lo resuelve | Estado |
 |---|---|---|---|---|
 | G1 | Línea base manual (horas por ciclo) para el criterio de reducción ≥30 % (¿medirla sobre los mismos 500 registros?) | Columna "manual" de la Tabla 4 sin llenar | Equipo | Abierto; **aún no se ha pedido** |
-| G2 | Las dos fuentes concretas y su diccionario de datos (campos, tipos, formato, separador, codificación) | `population` / `validation`, esquema provisional en `generator/` | Jhon | Abierto; **pedido a Jhon** |
-| G3 | Criterios de focalización | `TARGETING_PLACEHOLDER_01` | Jhon (manual SDIS) | Abierto; **pedido a Jhon** |
-| G4 | Reglas de bloqueo (el doc menciona 15, no las enumera); se piden 1 o 2 reales con su causal | `BLOCK_PLACEHOLDER_01/02` | Jhon | Abierto; **pedido a Jhon** |
-| G5 | Regla de selección de titular | Orden ilustrativo en `param.holder_rule` | Jhon | Abierto; **pedido a Jhon** |
-| G6 | Regla de coincidencia/supervivencia del MDM (umbrales) | Documento exacto; prevalece la fuente poblacional (`img_lib.mdm`) | Jhon | Abierto; **pedido a Jhon** |
-| G7 | Estructura del listado por operador | Columnas de la Tabla 7 | Jhon | Abierto; **pedido a Jhon** |
+| G2 | Las dos fuentes concretas y su diccionario de datos | Base maestra (`RSH_*`/`SIS_*`) e inhumados; mapeo en `img_lib.mapping` y [`NAMING.md`](NAMING.md) | Jhon | **Cerrado** con la información de Jhon; detalle en D1 y D10 de `DESIGN_DECISIONS.md` |
+| G3 | Criterios de focalización | `RSH_grupo_S4 = '1. SISBEN IV - A'` (`param.targeting_criteria`) | Jhon | **Cerrado** |
+| G4 | Reglas de bloqueo | `RSH_vigencia_renec NOT IN (0,12)` y existencia en inhumados (`param.block_rules`) | Jhon | **Cerrado** para estas dos reglas; semántica de nulos en D2 |
+| G5 | Regla de selección de titular | Adulta, no bloqueada, mujer, bancarizada; desempate por edad y documento (`param.holder_rule`) | Jhon | **Cerrado**; la lectura de «bancarizada» como preferencia está en D3 |
+| G6 | Regla de coincidencia/supervivencia del MDM (umbrales) | Identidad por tipo + número; prevalece la fuente poblacional (`img_lib.mdm`) | Jhon | Parcial: falta confirmar umbrales de coincidencia aproximada |
+| G7 | Estructura del listado por operador | 32 columnas del diccionario de dispersión, un `.xlsx` por operador (`img_lib.dispersal`) | Jhon | **Cerrado**; D5-D8 y D10 |
 | G8 | Plazo y canal de cada control | 30 min en la demo (el portal exige un mínimo de 10 min en la actividad Approval) | Equipo | Abierto |
-| G9 | Orden de dependencias entre cuadernos (el §23 lo marca como supuesto) | El de la Tabla 8 | Equipo | Abierto; el DAG con dependencias funciona en Fabric (`runMultiple`, `nb_env_check`) |
+| G9 | Orden de dependencias entre cuadernos (el §23 lo marca como supuesto) | El de la Tabla 8 | Equipo | Parcial: el DAG funciona en Fabric (`runMultiple`, `nb_env_check`); falta correr la cadena completa sobre el esquema nuevo |
 | G10 | ¿La Approval activity incluye aprobador y hora? | **Cerrado.** No los incluye en la salida; se registra el aprobador designado en `approvers` y la hora de término (`utcNow()`). Rechazo y vencimiento se distinguen por el mensaje. Ver `pipelines/INVENTORY.md` | Plataforma | Cerrado. Quedan por declarar en el §23: función en vista previa y premisa del equipo (solo el designado puede aprobar) **no verificada con prueba** |
 | G11 | Costo operativo por ciclo (Tabla 4) | CU·s × precio de lista, declarado como estimado | Equipo | Abierto |
 
@@ -24,9 +23,9 @@ G2 a G7 son los 7 insumos que se le pidieron a Jhon (G2 incluye las dos fuentes 
 ## Pendientes nuevos (no numerados en el documento)
 | Pendiente | Detalle | Estado |
 |---|---|---|
-| Importar los 23 cuadernos reales a Fabric | Solo `nb_env_check*` están importados. Duda abierta: si Fabric parte los `.py` en celdas por `# %%` (no verificado; nadie lo ha reportado); si no, generar `.ipynb` en el paquete. Cada cuaderno necesita lakehouse por defecto, Environment y celda de parámetros marcada; se sugiere fijar el Environment como predeterminado del workspace | Abierto |
+| Importar los 23 cuadernos reales a Fabric (y volver a subir datos sintéticos, wheel y DDL de parámetros del esquema nuevo; ver `ENV_CHECK.md` §3) | Solo `nb_env_check*` están importados. Duda abierta: si Fabric parte los `.py` en celdas por `# %%` (no verificado; nadie lo ha reportado); si no, generar `.ipynb` en el paquete. Cada cuaderno necesita lakehouse por defecto, Environment y celda de parámetros marcada; se sugiere fijar el Environment como predeterminado del workspace | Abierto |
 | Generar `pl_img_cycle` | 20 actividades, 4 controles y parámetros (ver `pipelines/README.md`). Falta saber cómo espera Fabric los parámetros de `TridentNotebook`: se necesita un JSON exportado de un pipeline con un cuaderno parametrizado. Se generará con un script desde la definición del DAG de `img_lib` | Abierto; se necesita ese JSON de ejemplo (no pedido a Jhon) |
-| Capa de mapeo de nombres | Renombrar las columnas reales (en español) a los nombres internos entre Bronce y Plata; depende de G2. Ver `docs/NAMING.md` | No construida |
+| Capa de mapeo de nombres | `img_lib.mapping` renombra `RSH_*`/`SIS_*` a nombres internos entre Bronce y Plata. Ver `docs/NAMING.md` | **Hecha** (probada en local; falta correrla en Fabric) |
 | Automatizar la importación de pipelines | Crear o importar pipelines (y lo estandarizable) en Fabric por importación o API para reducir el factor humano. Hoy `scripts/pipeline_tool.py` genera el JSON, pero se pega a mano en el portal. Detalle, enfoques evaluados y plan por fases en el [issue #8](https://github.com/plazasgiovanny/img-poc-fabric/issues/8) | Abierto |
 | Mejorar la prueba «default lakehouse» de `nb_env_check` | No verifica el nombre: `spark.catalog.currentDatabase()` devuelve un id interno. Usar `defaultLakehouseName` del contexto | Abierto |
 | Verificar la premisa de aprobación | Que otro miembro del chat no pueda aprobar al abrir el enlace | No verificado |

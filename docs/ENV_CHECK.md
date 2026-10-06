@@ -48,11 +48,32 @@ print(run_sql_script(ddl_01), run_sql_script(ddl_02))
 ```
 
 El fragmento asume que ningún literal de texto del DDL contiene `;` ni `--`. Con el DDL actual se aplicaron
-**13 sentencias** de `01_ctl_param.sql` y **7** de `02_param_illustrative.sql` (esquemas `ctl` y `param` en `lh_control`).
+**13 sentencias** de `01_ctl_param.sql` y **7** de la versión anterior de `02_param_illustrative.sql` (la actual trae 14: un `DELETE` y un `INSERT` por tabla) (esquemas `ctl` y `param` en `lh_control`).
 
 ### 3. Datos sintéticos
 En `lh_control` > Files, subir la carpeta `3_data/Files/synthetic` (queda `Files/synthetic/landing/cutoff1/…` y
 `Files/synthetic/ground_truth/…`). `ground_truth` nunca la lee el pipeline; solo sirve para medir errores.
+
+Desde la adaptación al esquema real, `landing/cutoff1/population.csv` es la **base maestra** (columnas `RSH_*`/`SIS_*`,
+separador `||`, UTF-8) y `validation.csv` la **base de inhumados** (`RSH_tip_documento||RSH_num_documento||fecha_defuncion`).
+Los nombres de archivo no cambian, pero el contenido sí: **volver a subir** `3_data/Files/synthetic` completa
+(reemplazando) y **reaplicar `02_param_illustrative.sql`** (ahora es repetible: vacía cada tabla `param.*` antes de insertar).
+
+Si ya se corrió Bronce/Plata con el esquema anterior, las tablas Delta existentes tienen otras columnas y el `append`
+fallaría. Borrarlas una vez desde un cuaderno con `lh_control` por defecto (o crear tablas nuevas):
+```python
+for t in ["lh_bronze.bronze.population_raw", "lh_bronze.bronze.validation_raw", "lh_bronze.bronze.deliveries",
+          "lh_silver.population.records", "lh_silver.validation.records", "lh_silver.quality.quarantine",
+          "lh_silver.mdm.person", "lh_silver.mdm.household", "lh_silver.mdm.xref",
+          "lh_gold.sources.population_cutoff", "lh_gold.sources.validation_cutoff"]:
+    spark.sql(f"DROP TABLE IF EXISTS {t}")
+```
+Y, si existen de corridas previas, las de `lh_gold.crosschecks.*` y `lh_gold.settlement.*`.
+
+**Listados `.xlsx`:** `img_lib.dispersal` usa `openpyxl` (importación diferida; extra opcional `img_lib[xlsx]`). El runtime
+de Fabric lo suele traer, pero **no está verificado en este entorno**: antes de la corrida ejecutar `import openpyxl` en un
+cuaderno con `env_img`; si falla, agregar `openpyxl` en `env_img` > Public libraries (PyPI) y publicar. Al cambiar `img_lib`
+(nuevos módulos `mapping`, `dispersal`) **hay que publicar de nuevo el wheel** en `env_img` y reiniciar las sesiones.
 
 ### 4. Importar y configurar los cuadernos
 1. Workspace > Import > Notebook: subir los `.ipynb` de `4_notebooks/` (traen la versión de git en `NOTEBOOK_VERSION`).

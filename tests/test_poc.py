@@ -12,6 +12,7 @@ from img_lib.validate import validate_keys, validate_record
 import generator
 from img_lib import (
     active,
+    mapping,
     mdm,
     normalize_doc_number,
     normalize_name,
@@ -64,9 +65,25 @@ def test_generator_deterministic_and_defects():
     b = generator.generate(500, 1)
     assert a == b
     defects = "|".join(v["defects"] for v in a["ground_truth"])
-    for d in ("malformed_doc", "exact_duplicate", "name_variant"):
+    for d in ("malformed_doc", "invalid_doc_type", "exact_duplicate", "name_variant", "homonym", "doc_type_mismatch"):
         assert d in defects
-    assert all(r["doc_number"].startswith("99") for r in a["population"] if r["doc_number"][:2].isdigit())
+    assert all(r["RSH_num_documento"].startswith("99") for r in a["population"])
+    assert set(a["population"][0]) == set(mapping.MASTER_COLUMNS)
+    assert set(a["validation"][0]) == set(mapping.DECEASED_COLUMNS)
+    ages = [int(r["SIS_edad"]) for r in a["population"]]
+    assert min(ages) < 18 < max(ages)  # hay menores de edad
+    assert any(g["true_is_holder"] for g in a["ground_truth"]) and any(g["true_renec_blocked"] for g in a["ground_truth"])
+
+
+def test_generator_csv_format(tmp_path):
+    generator.write(generator.generate(100, 1), tmp_path, 1)
+    lines = (tmp_path / "landing" / "cutoff1" / "population.csv").read_text(encoding="utf-8").splitlines()
+    assert lines[0] == "||".join(mapping.MASTER_COLUMNS)
+    assert all(len(line.split("||")) == len(mapping.MASTER_COLUMNS) for line in lines)
+    assert '"' not in "".join(lines)
+    inh = (tmp_path / "landing" / "cutoff1" / "validation.csv").read_text(encoding="utf-8").splitlines()
+    assert inh[0] == "RSH_tip_documento||RSH_num_documento||fecha_defuncion"
+    assert (tmp_path / "ground_truth" / "cutoff1" / "ground_truth.csv").exists()
 
 
 def test_logical_pipeline_against_ground_truth():
@@ -76,13 +93,12 @@ def test_logical_pipeline_against_ground_truth():
     silver, quarantine = [], []
     for source in ("population", "validation"):
         for r in data[source]:
-            rec, causes = validate_record({**r, "source": source}, today=TODAY)
+            rec, causes = validate_record({**mapping.to_internal(r, source), "source": source}, today=TODAY)
             (quarantine if causes else silver).append(rec)
 
     # cuarentena: exactamente lo que la verdad dice
     expected = {k for k, v in ground_truth.items() if v["goes_to_quarantine"]}
-    obtained = {(("population" if r["origin_id"].startswith("POP") else "validation"), r["origin_id"])
-                 for r in quarantine}
+    obtained = {(r["source"], r["origin_id"]) for r in quarantine}
     q_errors = len(expected ^ obtained)
     assert q_errors / len(ground_truth) < 0.01
 

@@ -22,27 +22,43 @@ def mdm_error_rate(ground_truth, xref):
     return errors / max(len(by_true), 1)
 
 
+def _true_of(ground_truth, xref):
+    v = {(x["source"], x["origin_id"]): x["true_person_id"] for x in ground_truth}
+    true_of = {}
+    for x in xref:
+        true_of.setdefault(x["person_id"], v[(x["source"], x["origin_id"])])
+    return true_of
+
+
 def block_error_rate(ground_truth, xref, targeting, expected, block_reasons):
     """Compara las causales de bloqueo aplicadas con las esperadas según la verdad conocida.
 
-    `expected(info) -> set de reasons`, con info = {"deceased": bool, "in_validation": bool}
-    de la persona real. Solo cuentan las causales de `block_reasons` (las reglas vigentes), así
-    no se mezclan con las de focalización. Tasa = filas con causales distintas / filas evaluadas."""
+    `expected(info) -> set de reasons`, con info = {"renec_blocked": bool, "in_registry": bool} de la
+    persona real (vigencia RENEC bloqueante; existe en inhumados con el mismo tipo y número). Solo cuentan
+    las causales de `block_reasons` (las reglas vigentes), así no se mezclan con las de focalización.
+    Tasa = filas con causales distintas / filas evaluadas."""
     info = {}
     for x in ground_truth:
-        r = info.setdefault(x["true_person_id"], {"deceased": False, "in_validation": False})
-        r["deceased"] |= x["true_status"] == "DECEASED"
-        r["in_validation"] |= x["source"] == "validation"
-    true_of = {}
-    v = {(x["source"], x["origin_id"]): x["true_person_id"] for x in ground_truth}
-    for x in xref:
-        true_of.setdefault(x["person_id"], v[(x["source"], x["origin_id"])])
+        r = info.setdefault(x["true_person_id"], {"renec_blocked": False, "in_registry": False})
+        r["renec_blocked"] |= bool(int(x.get("true_renec_blocked", 0)))
+        r["in_registry"] |= x["source"] == "validation"
+    true_of = _true_of(ground_truth, xref)
     errors = 0
     for f in targeting:
         obtained = {c for c in (f["reasons"] or "").split(";") if c in set(block_reasons)}
         if obtained != expected(info[true_of[f["person_id"]]]):
             errors += 1
     return errors / max(len(targeting), 1)
+
+
+def holder_error_rate(ground_truth, xref, holders):
+    """Titulares obtenidos vs. titulares esperados por la verdad conocida (true_is_holder), sobre el total
+    de personas reales de la fuente poblacional."""
+    true_of = _true_of(ground_truth, xref)
+    expected = {x["true_person_id"] for x in ground_truth if x["source"] == "population" and int(x["true_is_holder"])}
+    obtained = {true_of[h["person_id"]] for h in holders}
+    people = {x["true_person_id"] for x in ground_truth if x["source"] == "population"}
+    return len(expected ^ obtained) / max(len(people), 1)
 
 
 def audit_coverage(userMetadata_commits, run_log_ids):

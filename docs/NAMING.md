@@ -49,7 +49,7 @@ uno a otro sin perder la trazabilidad.
 ## Módulos de `img_lib`
 `normalize` (normalizar), `validate` (validar), `params` (parámetros vigentes), `fingerprint` (huella SHA-256),
 `run_log` (bitácora de ejecución), `mdm`, `crosschecks` (cruces), `settlement` (liquidación), `controls` (controles),
-`dag`, `metrics` (métricas), `cycle` (ciclo: apertura/cierre de la ejecución y escritura Delta), `illustrative` (parámetros ilustrativos).
+`mapping` (mapeo RSH_* y catálogos), `dispersal` (listado .xlsx), `dag`, `metrics` (métricas), `cycle` (ciclo: apertura/cierre de la ejecución y escritura Delta), `illustrative` (parámetros ilustrativos).
 
 ## Base de cruces (Tabla 7)
 | Grupo del documento | Columnas |
@@ -89,7 +89,34 @@ uno a otro sin perder la trazabilidad.
 | `orden` de la regla de titular | `rank` |
 | `por` de la partición de listados | `split_by` |
 
-## Fuentes reales (pendiente G2)
-Los nombres de campo de las fuentes reales (por ejemplo los de Sisbén IV) serán en español. Cuando el equipo entregue el
-diccionario, se agrega una capa de mapeo entre Bronce y Plata que renombre cada columna real al nombre interno de arriba;
-los cuadernos y `img_lib` no cambian.
+## Mapeo de la base maestra (RSH_*/SIS_*) a nombres internos
+Implementado en `img_lib.mapping`. Bronce conserva los nombres crudos; Plata (`nb_e1_silver`) ya usa los internos.
+| Columna de la maestra | Nombre interno | Nota |
+|---|---|---|
+| `RSH_id_llave_maestra` | `origin_id` | llave del registro |
+| `RSH_id_hogar` | `origin_household_id` | agrupa el hogar (MDM: `household_id`) |
+| `RSH_tip_parentesco` | `household_role` | catálogo 1-19 |
+| `RSH_tip_documento` | `doc_type` | código de la maestra como texto: 1 CC, 2 TI, 3 CE, 4 RC, 5 DNI, 6 Pasaporte, 7 Salvoconducto, 8 PEP, 9 PPT; 0 «No tiene» es inválido |
+| `RSH_num_documento` | `doc_number` | identidad = `doc_type` + `doc_number` |
+| `RSH_pri_nombre`, `RSH_seg_nombre`, `RSH_pri_apellido`, `RSH_seg_apellido` | `first_name`, `second_name`, `last_name`, `second_last_name` | además `first_names` / `last_names` (partes unidas, Tabla 7) |
+| `RSH_sexo_persona` | `sex` | 1 hombre, 2 mujer |
+| `RSH_fec_nacimiento` | `birth_date` | ISO |
+| `RSH_grupo_S4` | `sisben_group` | texto, p. ej. `1. SISBEN IV - A` |
+| `RSH_vigencia_renec` | `renec_validity` | código; vacío = no bloquea |
+| `SIS_edad` | `age` | |
+| `SIS_cod_loc`, `SIS_nom_loc` | `locality`, `locality_name` | 1-20 y 999 «ZZ-SIN INFORMACION» |
+| `SIS_bancarizado` | `banked` | 1 = tiene operador activo |
+| `Cuenta1` | `operator` | DAVIPLATA, NEQUI, ALM, MOVII, EFECTY, DALE, POWWI o SIN OPERADOR |
+| Inhumados: `RSH_tip_documento`, `RSH_num_documento`, `fecha_defuncion` | `doc_type`, `doc_number`, `death_date` | `origin_id` = `INH-<tipo>-<número>` |
+
+Base de cruces: sin `address`, `sisben_subgroup` ni `survey_date` (no vienen en las columnas que usa la PoC); nuevas `sex`, `age`,
+`banked`, `renec_validity`, `death_date`, `locality_name`, partes del nombre. `validation_value` = `DECEASED` cuando la persona existe en inhumados.
+
+Reglas (`param.*`): `holder_rule.criterion` ∈ `is_adult`, `is_not_blocked`, `is_woman`, `is_banked`, `age`, `doc_number`;
+`sort_direction` ∈ `ASC`, `DESC` (ordenan) y `REQUIRED` (filtra). Operador de regla: `=`, `!=`, `IN`, `NOT IN`.
+`param.payment_list_partition.split_by` = `operator`. Causales: `RENEC_NOT_VALID`, `IN_DECEASED_REGISTRY`, `NOT_MET_SISBEN_GROUP_A`.
+
+## Listado de dispersión (diccionario de dispersión)
+Módulo `img_lib.dispersal`: 32 columnas `sdp_*` (+ `parqueadero`) en el orden del diccionario. Un `.xlsx` por `sdp_operador` en
+`publication/<cycle_id>/<operador>/payment_list_<operador>.xlsx`. Tipo de documento maestra -> listado: 1 CC->3, 2 TI->2, 3 CE->4,
+4 RC->1, 5 a 9 igual, sin dato -> 0 (tabla `MASTER_TO_DISPERSAL_DOC_TYPE`, con prueba).

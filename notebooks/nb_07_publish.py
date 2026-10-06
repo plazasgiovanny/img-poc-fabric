@@ -1,4 +1,4 @@
-# nb_07_publish — Adaptación de la PoC al §18.4: publica en OneLake Files (carpeta por ciclo y operador, con huella SHA-256). Producción: Azure Storage con política de inmutabilidad. SOLO se ejecuta si C1 a C4 están APROBADOS.
+# nb_07_publish — Adaptación de la PoC al §18.4: publica en OneLake Files (carpeta por ciclo y operador con el listado .xlsx de 32 columnas y huella SHA-256). Producción: Azure Storage con política de inmutabilidad. SOLO se ejecuta si C1 a C4 están APROBADOS.
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"

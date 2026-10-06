@@ -1,4 +1,4 @@
-# nb_e1_silver — Etapa 1 (§16): normaliza tipos/números de documento, nombres, fechas y localidades;
+# nb_e1_silver — Etapa 1 (§16): aplica el mapeo RSH_* -> nombres internos (img_lib.mapping) y normaliza documento, nombres, fechas, sexo, edad y localidad;
 # elimina duplicados exactos DENTRO de cada fuente; aplica reglas de calidad. Lo que incumple va a
 # quality.quarantine con la causa del rechazo. (PoC: una sola función para ambas fuentes.)
 
@@ -11,6 +11,7 @@ NOTEBOOK_VERSION = "dev"
 # %% Ejecución
 from datetime import date
 
+from img_lib import mapping
 from img_lib.cycle import close, write, start, read_cycle
 from img_lib.validate import validate_record
 
@@ -24,13 +25,14 @@ for source in ("population", "validation"):
              .where(f"_cycle_id = '{cycle_id}' AND _cutoff_date = '{cutoff}'").collect()]
     ok, rejected, seen = [], [], set()
     for r in rows:
-        rec, causes = validate_record(r, today=today)
+        mapped = mapping.to_internal(r, source)  # Bronce (RSH_*) -> nombres internos
+        rec, causes = validate_record(mapped, today=today)
         if causes:
-            rejected.append({"source": source, "origin_id": r["origin_id"], "rule": ";".join(causes),
-                               "cause": ";".join(causes), "value": str(r.get("doc_number")),
+            rejected.append({"source": source, "origin_id": mapped.get("origin_id"), "rule": ";".join(causes),
+                               "cause": ";".join(causes), "value": str(mapped.get("doc_number")),
                                "execution_id": EXEC_ID})
             continue
-        key = (rec["doc_type"], rec["doc_number"], rec["first_names"], rec["last_names"], rec.get("birth_date"))
+        key = (rec["doc_type"], rec["doc_number"], rec.get("first_names"), rec.get("last_names"), rec.get("birth_date"))
         if key in seen:  # duplicado exacto dentro de la fuente
             dup_errors += 1
             continue

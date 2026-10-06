@@ -16,6 +16,7 @@ Las reglas de focalización, bloqueo y titular vienen del equipo de la fuente; l
 | D8 | Identificadores del listado generados de forma determinista desde `cycle_id` y el número de fila: `sdp_id_listado` = `1` + ciclo + fila (6 dígitos), `sdp_id_IMG` = `2` + ciclo + fila, `sdp_id_pago` = `IMG-<ciclo>-<fila>`, `sdp_Giro` = ciclo + `01`. Ciclo = dígitos de `cycle_id` (`2026-09` -> `202609`). | `dispersal.listing_ids` |
 | D9 | No se aplica bloqueo por edad: los menores no se descartan de la base, simplemente no pueden ser titulares. |  |
 | D10 | Campos sin fuente en la PoC (UPZ, celular, cuenta, grupo/puntaje/clasificación SISBEN del listado, tipo de beneficiario, parqueadero) salen con el valor por defecto o vacíos del diccionario. | `dispersal.to_dispersal_row` |
+| D11 | Plata valida las fechas contra la fecha de corte del ciclo (`ctl.cycle.cutoff_date`), no contra `date.today()`, para ser determinista entre corridas; `is_adult` sigue usando `SIS_edad` (edad oficial de la maestra al corte, un dato de la fuente) y se elimina `age_from_birth` por ser código sin uso. | `nb_e1_silver` |
 
 Valores de demostración (`is_illustrative = 1`): operadores habilitados y su prioridad, fuente de financiación y techo, y partición de
 los listados. Los datos son sintéticos (semilla fija) y no se versionan.

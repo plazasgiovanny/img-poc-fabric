@@ -85,6 +85,8 @@ def test_validate_record_builds_full_names_and_flags_causes():
     assert causes == [] and "first_names" not in out
 
 
-def test_age_from_birth():
-    assert mapping.age_from_birth("2000-10-02", date(2026, 10, 1)) == 25
-    assert mapping.age_from_birth("2000-10-01", date(2026, 10, 1)) == 26
+def test_birth_date_is_validated_against_the_cutoff_date_not_the_run_date():
+    """Plata es determinista: una fecha posterior al corte se rechaza aunque ya haya pasado al correr."""
+    cutoff = date(2026, 9, 30)
+    assert normalize.normalize_date("2026-10-03", cutoff)[1] == "date_out_of_range"
+    assert normalize.normalize_date("2026-09-30", cutoff)[1] is None

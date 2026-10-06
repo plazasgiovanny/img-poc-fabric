@@ -9,15 +9,14 @@ pipeline_run_id = None
 NOTEBOOK_VERSION = "dev"
 
 # %% Ejecución
-from datetime import date
-
 from img_lib import mapping
 from img_lib.cycle import close, write, start, read_cycle
 from img_lib.validate import validate_record
 
 EXEC_ID, T0 = start(spark, cycle_id, execution_id)  # noqa: F821
-cutoff = read_cycle(spark, cycle_id)["cutoff"]  # noqa: F821
-today = date.today()
+CYCLE = read_cycle(spark, cycle_id)  # noqa: F821
+cutoff = CYCLE["cutoff"]
+cutoff_date = CYCLE["cutoff_date"]  # fecha de corte del ciclo: Plata no depende del día de la corrida
 total, dup_errors = 0, 0
 
 for source in ("population", "validation"):
@@ -26,7 +25,7 @@ for source in ("population", "validation"):
     ok, rejected, seen = [], [], set()
     for r in rows:
         mapped = mapping.to_internal(r, source)  # Bronce (RSH_*) -> nombres internos
-        rec, causes = validate_record(mapped, today=today)
+        rec, causes = validate_record(mapped, today=cutoff_date)
         if causes:
             rejected.append({"source": source, "origin_id": mapped.get("origin_id"), "rule": ";".join(causes),
                                "cause": ";".join(causes), "value": str(mapped.get("doc_number")),

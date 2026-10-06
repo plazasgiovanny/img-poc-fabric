@@ -18,6 +18,7 @@ Las reglas de focalización, bloqueo y titular vienen del equipo de la fuente; l
 | D10 | Campos sin fuente en la PoC (UPZ, celular, cuenta, grupo/puntaje/clasificación SISBEN del listado, tipo de beneficiario, parqueadero) salen con el valor por defecto o vacíos del diccionario. | `dispersal.to_dispersal_row` |
 | D11 | Plata valida las fechas contra la fecha de corte del ciclo (`ctl.cycle.cutoff_date`), no contra `date.today()`, para ser determinista entre corridas; `is_adult` sigue usando `SIS_edad` (edad oficial de la maestra al corte, un dato de la fuente) y se elimina `age_from_birth` por ser código sin uso. | `nb_e1_silver` |
 | D12 | El informe y el resumen de C4 incluyen `households_without_holder`: hogares con alguna persona elegible pero sin titular (ninguna elegible es adulta); quedan sin pago por diseño (D4). | `settlement.households_without_holder`, `build_report` |
+| D13 | `runMultiple` corre con `concurrency = 1`: todos los cuadernos comparten la sesión Spark y `run_log.mark_commits` fija `spark.databricks.delta.commitInfo.userMetadata` a nivel de sesión; en paralelo un cuaderno marcaría los commits de otro y la atribución commit -> cuaderno sería incorrecta. Se paga con menos paralelismo (p. ej. `nb_02` y `nb_03`, o los dos cruces de la Etapa 2, corren en serie). | `dag.build_dag`, `run_log.mark_commits` |
 
 Valores de demostración (`is_illustrative = 1`): operadores habilitados y su prioridad, fuente de financiación y techo, y partición de
 los listados. Los datos son sintéticos (semilla fija) y no se versionan.

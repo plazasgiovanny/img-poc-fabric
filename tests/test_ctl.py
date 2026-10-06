@@ -16,6 +16,7 @@ def test_dag_valid_and_args():
     assert by_name["nb_04_funding_source"]["dependencies"] == ["nb_03_amount"]  # requiere el monto
     assert by_name["nb_00_targeting"]["args"] == {"cycle_id": "2026-09", "pipeline_run_id": "run-1"}
     assert d["activities"][0]["timeoutPerCellInSeconds"] > 90  # el valor por defecto de runMultiple
+    assert d["concurrency"] == 1  # mark_commits usa un spark.conf de sesión compartida
 
 
 @pytest.mark.parametrize("graph", [dag.DAG_E1, dag.DAG_E2, dag.DAG_PAYMENT_LISTS])

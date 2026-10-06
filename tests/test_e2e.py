@@ -84,6 +84,15 @@ def test_full_chain_and_criteria():
     assert 0 < crosschecks.match_pct(c["base"]) < 100
 
 
+def test_origin_id_reaches_the_dispersal_listing():
+    """sdp_id_llave_maestra sale de origin_id: la base de cruces debe conservarlo hasta el listado."""
+    c = run_chain()
+    assert all(r["origin_id"] for r in c["base"])
+    assert all(f["origin_id"] for f in c["master_sheet"])
+    llaves = [dispersal.to_dispersal_row(f)["sdp_id_llave_maestra"] for f in c["master_sheet"]]
+    assert llaves and all(isinstance(x, int) for x in llaves)
+
+
 def test_report_publication_and_fingerprint(tmp_path):
     c = run_chain()
     inf = settlement.build_report(

@@ -28,7 +28,7 @@ def build_base(pop_gold, val_gold, *, cycle_id, cutoff_date, source_versions, ex
             "population_source_version": source_versions.get("population"),
             "validation_source_version": source_versions.get("validation"),
             # Persona
-            "person_id": person_id, "doc_type": p["doc_type"], "doc_number": p["doc_number"],
+            "person_id": person_id, "origin_id": p.get("origin_id"), "doc_type": p["doc_type"], "doc_number": p["doc_number"],
             "first_name": p.get("first_name"), "second_name": p.get("second_name"),
             "last_name": p.get("last_name"), "second_last_name": p.get("second_last_name"),
             "first_names": p.get("first_names"), "last_names": p.get("last_names"),

@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Sin publicar]
+- Correcciones de la revisión: `cycle.write` falla con `ValueError` si las filas traen columnas que la tabla existente no tiene; `docs/ENV_CHECK.md` §3 exige borrar todas las tablas Delta de las capas (con `DROP TABLE IF EXISTS`) y usar un `cycle_id` nuevo; la base de cruces conserva `origin_id` (`sdp_id_llave_maestra` ya no sale NULL); Plata usa la fecha de corte del ciclo en vez de `date.today()` y se elimina `age_from_birth`; la regla de titular `is_not_blocked` pasa a `is_eligible` (mismo comportamiento) y el informe cuenta `households_without_holder`; `runMultiple` con `concurrency=1`; desempate numérico por número de documento; `OPEN_ITEMS.md` sin la duda del `.py`. Decisiones D11-D13 en `docs/DESIGN_DECISIONS.md`. Hay que reaplicar `ddl/02_param_illustrative.sql` y publicar de nuevo el wheel.
 - Esquema real de las fuentes (diccionarios de la base maestra y de dispersión): `img_lib.mapping` (RSH_* a nombres internos y catálogos), generador con `RSH_*`/`SIS_*` y base de inhumados (CSV `||`), `nb_e1_bronze`/`nb_e1_silver` adaptados, reglas de focalización (`RSH_grupo_S4`), bloqueo `NOT IN` por RENEC y por inhumados, titular según criterios ordenados, operador de la cuenta, listado `.xlsx` de 32 columnas por operador (`img_lib.dispersal`), métrica de titulares, `ddl/02` repetible, CI con `openpyxl`. Decisiones de diseño en `docs/DESIGN_DECISIONS.md`; G2-G7 cerrados, G6 y G9 parciales.
 - Estructura inicial del repo, `img_lib` 0.1.0, generador sintético, DDL de control/parámetros,
   cuadernos de la Etapa 1 y CI.

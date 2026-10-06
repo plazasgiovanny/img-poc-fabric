@@ -19,7 +19,7 @@ INSERT INTO param.block_rules VALUES
 DELETE FROM param.holder_rule;
 INSERT INTO param.holder_rule VALUES
  (1, 'is_adult', 'REQUIRED', DATE'2026-01-01', NULL, 'SDIS', 'Titular: mayor de edad', 0),
- (2, 'is_not_blocked', 'REQUIRED', DATE'2026-01-01', NULL, 'SDIS', 'Titular: no bloqueada', 0),
+ (2, 'is_eligible', 'REQUIRED', DATE'2026-01-01', NULL, 'SDIS', 'Titular entre elegibles: adulta, focalizada y no bloqueada', 0),
  (3, 'is_woman', 'DESC', DATE'2026-01-01', NULL, 'SDIS', 'Titular: prioridad a la mujer del hogar', 0),
  (4, 'is_banked', 'DESC', DATE'2026-01-01', NULL, 'SDIS', 'Titular: bancarizada', 0),
  (5, 'age', 'DESC', DATE'2026-01-01', NULL, 'SDIS', 'Desempate: mayor edad', 0),

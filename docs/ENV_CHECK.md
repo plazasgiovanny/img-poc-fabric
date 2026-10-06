@@ -59,16 +59,29 @@ separador `||`, UTF-8) y `validation.csv` la **base de inhumados** (`RSH_tip_doc
 Los nombres de archivo no cambian, pero el contenido sí: **volver a subir** `3_data/Files/synthetic` completa
 (reemplazando) y **reaplicar `02_param_illustrative.sql`** (ahora es repetible: vacía cada tabla `param.*` antes de insertar).
 
-Si ya se corrió Bronce/Plata con el esquema anterior, las tablas Delta existentes tienen otras columnas y el `append`
-fallaría. Borrarlas una vez desde un cuaderno con `lh_control` por defecto (o crear tablas nuevas):
+Si ya se corrió algo con el esquema anterior, las tablas Delta existentes tienen otras columnas. `img_lib.cycle.write`
+falla con `ValueError: columns not in table ...` si las filas traen columnas que la tabla no tiene (antes las perdía en
+silencio). **Es obligatorio** borrar estas tablas una vez, desde un cuaderno con `lh_control` por defecto, antes de la
+primera corrida con el esquema nuevo (`DROP TABLE IF EXISTS` no falla si alguna no existe):
 ```python
-for t in ["lh_bronze.bronze.population_raw", "lh_bronze.bronze.validation_raw", "lh_bronze.bronze.deliveries",
-          "lh_silver.population.records", "lh_silver.validation.records", "lh_silver.quality.quarantine",
-          "lh_silver.mdm.person", "lh_silver.mdm.household", "lh_silver.mdm.xref",
-          "lh_gold.sources.population_cutoff", "lh_gold.sources.validation_cutoff"]:
+for t in [
+    # Bronce
+    "lh_bronze.bronze.population_raw", "lh_bronze.bronze.validation_raw", "lh_bronze.bronze.deliveries",
+    # Plata
+    "lh_silver.population.records", "lh_silver.validation.records", "lh_silver.quality.quarantine",
+    "lh_silver.mdm.person", "lh_silver.mdm.household", "lh_silver.mdm.xref",
+    # Oro: fuentes, cruces y liquidación
+    "lh_gold.sources.population_cutoff", "lh_gold.sources.validation_cutoff",
+    "lh_gold.crosschecks.stg_population", "lh_gold.crosschecks.stg_validation",
+    "lh_gold.crosschecks.crosscheck_base",
+    "lh_gold.settlement.targeting", "lh_gold.settlement.holders", "lh_gold.settlement.payment_method",
+    "lh_gold.settlement.amount", "lh_gold.settlement.funding_source", "lh_gold.settlement.payment_list",
+]:
     spark.sql(f"DROP TABLE IF EXISTS {t}")
 ```
-Y, si existen de corridas previas, las de `lh_gold.crosschecks.*` y `lh_gold.settlement.*`.
+Esa lista es todo lo que el código escribe en `lh_bronze`, `lh_silver` y `lh_gold` (cuadernos `nb_e1_*`, `nb_e2_*` y
+`nb_00`..`nb_07`). Además, **usar un `cycle_id` nuevo** (p. ej. `2026-10a`): `nb_init_cycle` rechaza un ciclo que ya
+existe en `ctl.cycle`, y las tablas de `lh_control` (`ctl.*`) no se borran.
 
 **Listados `.xlsx`:** `img_lib.dispersal` usa `openpyxl` (importación diferida; extra opcional `img_lib[xlsx]`). El runtime
 de Fabric lo suele traer, pero **no está verificado en este entorno**: antes de la corrida ejecutar `import openpyxl` en un

@@ -50,14 +50,28 @@ def ddl_types(rows) -> str:
     return ", ".join(parts)
 
 
+def extra_columns(rows, table_columns) -> list:
+    """Claves de las filas que no están en las columnas de la tabla (orden de aparición)."""
+    known = set(table_columns)
+    return list(dict.fromkeys(k for f in rows for k in f if k not in known))
+
+
 def write(spark, rows, table, mode="append") -> int:
     """Escritura estandarizada en Delta con esquema explícito. Devuelve la cantidad de filas.
 
     Si la tabla ya existe (por ejemplo, creada por el DDL), manda su esquema: así una columna con solo
     None conserva el tipo declarado (BIGINT, DOUBLE...) en vez de caer a string y chocar al anexar.
-    Si no existe, se infiere con `ddl_types`."""
+    Si no existe, se infiere con `ddl_types`. Si las filas traen columnas que la tabla no tiene (tabla vieja
+    de una corrida anterior), falla con ValueError en vez de descartarlas en silencio."""
     if rows:
-        schema = spark.table(table).schema if spark.catalog.tableExists(table) else ddl_types(rows)
+        if spark.catalog.tableExists(table):
+            schema = spark.table(table).schema
+            extra = extra_columns(rows, schema.names)
+            if extra:
+                raise ValueError(f"columns not in table {table}: {', '.join(extra)} "
+                                 "(old table from a previous run: drop it or use a new cycle/table)")
+        else:
+            schema = ddl_types(rows)
         spark.createDataFrame(rows, schema=schema).write.format("delta").mode(mode).saveAsTable(table)
     return len(rows)
 

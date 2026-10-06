@@ -16,6 +16,7 @@ def test_dag_valid_and_args():
     assert by_name["nb_04_funding_source"]["dependencies"] == ["nb_03_amount"]  # requiere el monto
     assert by_name["nb_00_targeting"]["args"] == {"cycle_id": "2026-09", "pipeline_run_id": "run-1"}
     assert d["activities"][0]["timeoutPerCellInSeconds"] > 90  # el valor por defecto de runMultiple
+    assert d["concurrency"] == 1  # mark_commits usa un spark.conf de sesión compartida
 
 
 @pytest.mark.parametrize("graph", [dag.DAG_E1, dag.DAG_E2, dag.DAG_PAYMENT_LISTS])
@@ -113,7 +114,7 @@ def test_write_infers_schema_when_table_is_missing():
 def test_write_uses_the_existing_table_schema():
     """Una columna todo None conserva el tipo declarado de la tabla (p. ej. BIGINT), no cae a string."""
     from img_lib.cycle import write
-    esquema = object()
+    esquema = types.SimpleNamespace(names=["a", "b"])
     spark = _FakeSpark({"lh_x.s.t": esquema})
     write(spark, [{"a": None, "b": 1}], "lh_x.s.t")
     assert spark.sink["schema"] is esquema
@@ -127,7 +128,8 @@ def test_write_ignores_empty_rows():
 
 def test_run_log_record_writes_none_columns_with_the_table_schema():
     from img_lib import run_log
-    esquema = object()
+    esquema = types.SimpleNamespace(names=list(run_log.event(cycle_id="c", execution_id="e", notebook="n",
+                                                              notebook_version="v", process_stage="s", trace_event="t")))
     spark = _FakeSpark({run_log.RUN_LOG_TABLE: esquema})
     row = run_log.event(cycle_id="c", execution_id="e", notebook="n", notebook_version="v",
                         process_stage="s", trace_event="t")
@@ -141,3 +143,12 @@ def test_run_log_record_accepts_another_table():
     spark = _FakeSpark()
     run_log.record(spark, {"x": 1}, "lh_control.ctl.env_check_run_log")
     assert spark.sink["table"] == "lh_control.ctl.env_check_run_log"
+
+
+def test_write_rejects_columns_missing_in_existing_table():
+    from img_lib.cycle import extra_columns, write
+    assert extra_columns([{"a": 1, "b": 2}, {"a": 1, "c": 3}], ["a", "b"]) == ["c"]
+    spark = _FakeSpark({"lh_x.s.t": types.SimpleNamespace(names=["a", "b"])})
+    with pytest.raises(ValueError, match="columns not in table lh_x.s.t: c"):
+        write(spark, [{"a": 1, "c": 2}], "lh_x.s.t")
+    assert spark.sink == {}

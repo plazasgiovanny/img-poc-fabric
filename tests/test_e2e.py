@@ -84,6 +84,25 @@ def test_full_chain_and_criteria():
     assert 0 < crosschecks.match_pct(c["base"]) < 100
 
 
+def test_origin_id_reaches_the_dispersal_listing():
+    """sdp_id_llave_maestra sale de origin_id: la base de cruces debe conservarlo hasta el listado."""
+    c = run_chain()
+    assert all(r["origin_id"] for r in c["base"])
+    assert all(f["origin_id"] for f in c["master_sheet"])
+    llaves = [dispersal.to_dispersal_row(f)["sdp_id_llave_maestra"] for f in c["master_sheet"]]
+    assert llaves and all(isinstance(x, int) for x in llaves)
+
+
+def test_households_without_holder_counts_eligible_households_with_no_adult_holder():
+    tgt = [{"person_id": "P1", "household_id": "H1", "eligible": True},
+           {"person_id": "P2", "household_id": "H2", "eligible": True},
+           {"person_id": "P3", "household_id": "H2", "eligible": False},
+           {"person_id": "P4", "household_id": "H3", "eligible": False}]
+    holders = [{"household_id": "H1", "person_id": "P1"}]
+    assert settlement.households_without_holder(tgt, holders) == 1  # H2; H3 no tiene elegibles
+    assert settlement.households_without_holder(tgt, []) == 2
+
+
 def test_report_publication_and_fingerprint(tmp_path):
     c = run_chain()
     inf = settlement.build_report(
@@ -93,6 +112,8 @@ def test_report_publication_and_fingerprint(tmp_path):
     assert inf["uses_illustrative_params"] is True  # R8: debe verse en el informe
     assert inf["lists_sum_equals_settlement"] is True
     assert inf["counts"]["settled_payments"] == len(c["hld"])
+    eligible_households = {f["household_id"] for f in c["tgt"] if f["eligible"]}
+    assert inf["counts"]["households_without_holder"] == len(eligible_households) - len(c["hld"])
     man = settlement.publish(c["files"], str(tmp_path), "2026-09")
     assert man and (tmp_path / "2026-09" / "manifest_sha256.csv").exists()
     from openpyxl import load_workbook

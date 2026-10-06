@@ -7,7 +7,7 @@ TOTAL_TIMEOUT = 3600
 
 
 def build_dag(activities, cycle_id, pipeline_run_id=None, cell_timeout=CELL_TIMEOUT,
-                  total_timeout=TOTAL_TIMEOUT, concurrency=2):
+                  total_timeout=TOTAL_TIMEOUT, concurrency=1):  # 1: mark_commits fija un spark.conf de sesión compartida; en paralelo se mezclaría el execution_id
     """`activities`: {notebook_name: [dependencias]}. Valida que no haya ciclos ni dependencias
     inexistentes y devuelve el JSON que espera runMultiple."""
     validate(activities)

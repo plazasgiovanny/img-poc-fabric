@@ -3,8 +3,6 @@ más los catálogos (tipo de documento, sexo, localidad, parentesco, operador) y
 
 Bronce conserva los nombres crudos; Plata ya trabaja con los nombres internos (ver docs/NAMING.md).
 Identidad de una persona = tipo + número de documento."""
-from datetime import date
-
 # ---- columnas de la maestra que usa la PoC (orden de emisión del generador) ----
 MASTER_COLUMNS = [
     "RSH_id_llave_maestra", "RSH_id_hogar", "RSH_tip_parentesco", "RSH_tip_documento", "RSH_num_documento",
@@ -146,15 +144,6 @@ def listing_locality_name(name):
 def operator_to_dispersal(account_operator):
     """(sdp_operador, sdp_producto) de un valor de Cuenta1; (None, None) si no hay operador."""
     return ACCOUNT_OPERATORS.get((blank(account_operator) or "").upper(), (None, None))
-
-
-def age_from_birth(birth, ref):
-    """Edad cumplida en `ref` (date) a partir de `birth` (date o ISO)."""
-    if isinstance(birth, str):
-        birth = date.fromisoformat(birth[:10])
-    if isinstance(ref, str):
-        ref = date.fromisoformat(ref[:10])
-    return ref.year - birth.year - ((ref.month, ref.day) < (birth.month, birth.day))
 
 
 def to_internal(row, source):

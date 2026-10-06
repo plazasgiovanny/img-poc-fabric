@@ -1,4 +1,4 @@
-# nb_04_funding_source — Tabla 8: fuente asignada a cada pago y saldo por fuente (requiere el monto). ILUSTRATIVO.
+# nb_04_funding_source — Tabla 8: fuente asignada a cada pago y saldo por fuente (requiere el monto). Fuentes de demostración (param.funding_sources).
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"

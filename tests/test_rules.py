@@ -153,3 +153,12 @@ def test_xlsx_structure(tmp_path):
     f.write_bytes(dispersal.xlsx_bytes(rows_in))
     rows = list(load_workbook(f).active.iter_rows(values_only=True))
     assert list(rows[0]) == dispersal.COLUMNS and len(rows) == 3
+
+
+def test_ddl_param_script_matches_python_mirror():
+    sql = (ROOT / "ddl" / "02_param_illustrative.sql").read_text(encoding="utf-8")
+    for row in ill.HOLDER_RULE:
+        assert f"'{row['criterion']}', '{row['sort_direction']}'" in sql
+    for row in ill.BLOCK_RULES:
+        assert f"'{row['rule_id']}'" in sql and f"'{row['reason']}'" in sql
+    assert "'NOT IN', '0,12'" in sql and "120000.0" in sql and "'1. SISBEN IV - A'" in sql

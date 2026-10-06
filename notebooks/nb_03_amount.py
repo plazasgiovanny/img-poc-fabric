@@ -1,4 +1,4 @@
-# nb_03_amount — Tabla 8: monto liquidado por hogar y sus componentes. ILUSTRATIVO: monto base de param.amounts.
+# nb_03_amount — Tabla 8: monto liquidado por hogar y sus componentes. monto base de param.amounts (120000 por el diccionario de dispersión).
 
 # %% Parámetros (marcar como "parameters" en Fabric). El único parámetro de negocio es cycle_id (§18.3).
 cycle_id = "2026-09"

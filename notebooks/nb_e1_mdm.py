@@ -1,5 +1,5 @@
 # nb_e1_mdm — Etapa 1 (§16): maestro de personas y de hogares sobre Plata, con reglas de
-# coincidencia y supervivencia. Reglas por defecto ILUSTRATIVAS (PENDIENTE G6), ver img_lib.mdm.
+# coincidencia y supervivencia. Identidad = tipo + número de documento; ver img_lib.mdm.
 # PoC (500-5.000 registros): se procesa en el driver; para volúmenes reales se migraría a Spark.
 
 # %% Parámetros

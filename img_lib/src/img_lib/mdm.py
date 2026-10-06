@@ -1,15 +1,17 @@
 """MDM sobre Plata (§16): maestro de personas y de hogares, cada uno con clave propia,
 con reglas de COINCIDENCIA y de SUPERVIVENCIA.
 
-Reglas por defecto, ILUSTRATIVAS hasta confirmar con el equipo (PENDIENTE G6):
-- coincidencia: igualdad exacta de (doc_type, doc_number) normalizados; nombres y fecha de
+Reglas por defecto (umbrales de coincidencia por confirmar, G6):
+- coincidencia: identidad = tipo + número de documento (igualdad exacta, normalizados); nombres y fecha de
   nacimiento solo actúan como desempate (si la misma llave documental trae fecha de nacimiento
   distinta, se trata como colisión y NO se unen).
 - supervivencia: para cada atributo prevalece la fuente de mayor prioridad que lo reporte."""
 from collections import defaultdict
 
-SOURCE_PRIORITY = ["population", "validation"]  # ILUSTRATIVO: la poblacional prevalece
-ATTRIBUTES = ("first_names", "last_names", "birth_date", "locality", "address", "origin_household_id")
+SOURCE_PRIORITY = ["population", "validation"]  # la poblacional prevalece
+ATTRIBUTES = ("first_name", "second_name", "last_name", "second_last_name", "first_names", "last_names",
+              "birth_date", "sex", "age", "locality", "locality_name", "origin_household_id", "household_role",
+              "sisben_group", "renec_validity", "banked", "operator", "death_date")
 
 
 def match_key(rec: dict):
@@ -62,8 +64,8 @@ def build_master(records: list[dict], priority=SOURCE_PRIORITY):
 
 
 def build_households(people: list[dict]):
-    """Maestro de hogares a partir de `origin_household_id` (ILUSTRATIVO: el agrupamiento real
-    del hogar depende del diccionario de la fuente poblacional, PENDIENTE G2)."""
+    """Maestro de hogares a partir de `origin_household_id` (el agrupamiento real
+    del hogar es RSH_id_hogar de la maestra)."""
     households, assign = {}, {}
     for p in people:
         h = p.get("origin_household_id") or f"NO_HOUSEHOLD_{p['person_id']}"

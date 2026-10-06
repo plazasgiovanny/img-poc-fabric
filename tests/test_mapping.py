@@ -5,8 +5,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "img_lib" / "src"))
 
-from img_lib import mapping, normalize
 from img_lib.validate import validate_record
+
+from img_lib import mapping, normalize
 
 TODAY = date(2026, 10, 1)
 

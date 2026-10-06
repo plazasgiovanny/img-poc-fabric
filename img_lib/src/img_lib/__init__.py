@@ -4,8 +4,8 @@ Python puro; las funciones que tocan Spark/Delta importan `pyspark` de forma dif
 
 __version__ = "0.1.0"
 
-from .fingerprint import sha256_bytes, sha256_file  # noqa: F401
 from . import mapping  # noqa: F401
+from .fingerprint import sha256_bytes, sha256_file  # noqa: F401
 from .normalize import (  # noqa: F401
     normalize_date,
     normalize_doc_number,

@@ -1,12 +1,14 @@
 """Etapa 3 (§18, Tabla 8): cuadernos de liquidación como funciones puras sobre la base de cruces.
 
-Los criterios y reglas son DATOS (tablas param.*), no código. Esta PoC solo implementa el motor
-genérico (operadores =, !=, IN) y los pasos mínimos. Lo marcado ILUSTRATIVO no proviene del manual
-de la SDIS (PENDIENTES G3 a G7)."""
+Los criterios y reglas son DATOS (tablas param.*), no código. Motor genérico con los operadores
+=, !=, IN y NOT IN. `is_illustrative = 1` en param.* marca solo valores de demostración (fuentes de
+financiación, partición de listados, prioridad de operadores)."""
 import csv
 import io
+import os
 from collections import defaultdict
 
+from . import dispersal, mapping
 from .fingerprint import sha256_bytes
 from .params import has_illustrative
 
@@ -17,12 +19,15 @@ FIELD_ALIASES = {"validation_status": "validation_value"}
 def _matches(row, field, operator, value):
     current_value = row.get(FIELD_ALIASES.get(field, field))
     current_value = None if current_value is None else str(current_value)
+    values = {v.strip() for v in str(value).split(",")}
     if operator == "=":
         return current_value == str(value)
     if operator == "!=":
         return current_value != str(value)
     if operator == "IN":
-        return current_value in {v.strip() for v in str(value).split(",")}
+        return current_value in values
+    if operator == "NOT IN":  # como en SQL, un valor nulo no cumple «NOT IN» (no bloquea)
+        return current_value is not None and current_value not in values
     raise ValueError(f"unsupported operator: {operator}")
 
 
@@ -39,36 +44,74 @@ def target(base, criteria, block_rules):
     return res
 
 
-# nb_01_holder: un titular por hogar según el orden de criterios parametrizado
+# nb_01_holder: un titular por hogar. Criterios (param.holder_rule, en orden): REQUIRED filtra
+# (mayor de edad, no bloqueada); ASC/DESC ordena (mujer, bancarizada, mayor edad, número de documento).
+def _derived(member, eligible, criterion):
+    if criterion == "is_adult":
+        age = member.get("age")
+        return int(age is not None and int(age) >= mapping.ADULT_AGE)
+    if criterion == "is_not_blocked":
+        return int(eligible)
+    if criterion == "is_woman":
+        return int(str(member.get("sex")) == mapping.SEX_WOMAN)
+    if criterion == "is_banked":
+        return int(str(member.get("banked")) == "1")
+    value = member.get(criterion)
+    return int(value) if criterion == "age" and value is not None else value
+
+
+def _sort_key(value, descending):
+    # los nulos van siempre al final
+    return (value is not None, value) if descending else (value is None, 0 if value is None else value)
+
+
 def select_holder(targeting, base, holder_rule):
     by_person = {r["person_id"]: r for r in base}
-    candidates = defaultdict(list)
+    eligible_of = {f["person_id"]: f["eligible"] for f in targeting}
+    household_members = defaultdict(list)
     for f in targeting:
-        if f["eligible"]:
-            candidates[f["household_id"]].append(by_person[f["person_id"]])
+        household_members[f["household_id"]].append(by_person[f["person_id"]])
     rank = sorted(holder_rule, key=lambda x: x["rank"])
     holders = []
-    for household in sorted(candidates):
-        members = candidates[household]
-        for criterion in reversed(rank):  # orden estable: el primer criterio manda
-            members = sorted(members, key=lambda m, c=criterion: str(m.get(c["criterion"]) or ""),
-                              reverse=criterion["sort_direction"] == "DESC")
+    for household in sorted(household_members):
+        members = household_members[household]
+        for c in rank:
+            if c["sort_direction"] == "REQUIRED":
+                members = [m for m in members if _derived(m, eligible_of[m["person_id"]], c["criterion"])]
+        if not members:
+            continue  # hogar sin titular elegible
+        members = sorted(members, key=lambda m: m["person_id"])  # último desempate, determinista
+        for c in reversed(rank):  # orden estable: el primer criterio manda
+            if c["sort_direction"] == "REQUIRED":
+                continue
+            descending = c["sort_direction"] == "DESC"
+            members = sorted(members, reverse=descending, key=lambda m, c=c, d=descending: _sort_key(
+                _derived(m, eligible_of[m["person_id"]], c["criterion"]), d))
         t = members[0]
         holders.append({"cycle_id": t["cycle_id"], "household_id": household, "person_id": t["person_id"],
                           "n_candidates": len(members)})
     return holders
 
 
-# nb_02_payment_method: ILUSTRATIVO. Sin datos financieros reales, se asigna el operador habilitado de
-# mayor prioridad; si la base trae product_status, solo se asignan productos activos (no definido: G2).
-def assign_payment_method(holders, operators):
+# nb_02_payment_method: el operador es el de la cuenta de la titular (Cuenta1). Si no tiene operador activo
+# (SIN OPERADOR o fuera de param.operators) se asigna el de mayor prioridad como respaldo.
+def assign_payment_method(holders, operators, base):
     ops = sorted(operators, key=lambda o: o["priority"])
     if not ops:
         raise ValueError("no enabled active operators")
-    return [{**t, "operator": ops[0]["operator"], "mode": "illustrative_stub"} for t in holders]
+    enabled = {o["operator"] for o in ops}
+    by_person = {r["person_id"]: r for r in base}
+    res = []
+    for t in holders:
+        own = (by_person[t["person_id"]].get("operator") or "").upper()
+        if own in enabled:
+            res.append({**t, "operator": own, "mode": "account_operator"})
+        else:
+            res.append({**t, "operator": ops[0]["operator"], "mode": "fallback_operator"})
+    return res
 
 
-# nb_03_amount: ILUSTRATIVO, monto base por hogar desde param.amounts
+# nb_03_amount: monto base por hogar desde param.amounts (parametrizable; 120000 según el diccionario de dispersión)
 def calculate_amount(holders, amounts):
     base = next(m for m in amounts if m["concept"] == "BASE_HOUSEHOLD_AMOUNT")["amount"]
     return [{"cycle_id": t["cycle_id"], "household_id": t["household_id"], "person_id": t["person_id"],
@@ -89,21 +132,29 @@ def assign_funding_source(amounts, sources):
     return payments, {"balance": balance, "payments_over_ceiling": over_ceiling}
 
 
-# nb_05_payment_lists: archivos por operador y fuente + sábana del ciclo
+# nb_05_payment_lists: sábana del ciclo (una fila por pago, con `seq`) y un archivo por operador (sdp_operador)
 def generate_payment_lists(payments, payment_method, base):
     by_person = {r["person_id"]: r for r in base}
-    op = {m["household_id"]: m["operator"] for m in payment_method}
+    method = {m["household_id"]: m for m in payment_method}
     rows = []
     for p in payments:
         b = by_person[p["person_id"]]
-        rows.append({"cycle_id": p["cycle_id"], "operator": op[p["household_id"]],
-                      "funding_source": p["funding_source"], "household_id": p["household_id"],
-                      "person_id": p["person_id"], "doc_type": b["doc_type"], "doc_number": b["doc_number"],
-                      "first_names": b["first_names"], "last_names": b["last_names"], "amount": p["amount"]})
+        account_operator = method[p["household_id"]]["operator"]
+        operator, product = mapping.operator_to_dispersal(account_operator)
+        rows.append({
+            "cycle_id": p["cycle_id"], "seq": 0, "operator": operator or mapping.NO_OPERATOR, "product": product,
+            "account_operator": account_operator, "funding_source": p["funding_source"],
+            "household_id": p["household_id"], "person_id": p["person_id"], "origin_id": b.get("origin_id"),
+            "doc_type": b["doc_type"], "doc_number": b["doc_number"], "first_name": b.get("first_name"),
+            "second_name": b.get("second_name"), "last_name": b.get("last_name"),
+            "second_last_name": b.get("second_last_name"), "renec_validity": b.get("renec_validity"),
+            "age": b.get("age"), "sex": b.get("sex"), "locality": b.get("locality"),
+            "locality_name": b.get("locality_name"), "amount": p["amount"]})
     master_sheet = sorted(rows, key=lambda f: (f["operator"], f["funding_source"], f["household_id"]))
     by_file = defaultdict(list)
-    for f in master_sheet:
-        by_file[(f["operator"], f["funding_source"])].append(f)
+    for n, f in enumerate(master_sheet, 1):
+        f["seq"] = n
+        by_file[f["operator"]].append(f)
     return master_sheet, dict(by_file)
 
 
@@ -116,21 +167,18 @@ def _csv_bytes(rows):
 
 
 def publish(files, root, cycle_id):
-    """nb_07_publish (adaptación de la PoC al §18.4): escribe {raiz}/{cycle_id}/{operador}/ y un
-    manifiesto SHA-256. En producción el destino es Azure Storage con política de inmutabilidad;
-    aquí es OneLake Files (sin inmutabilidad). Devuelve el manifiesto."""
-    import os
-
+    """nb_07_publish (adaptación de la PoC al §18.4): escribe {raiz}/{cycle_id}/{operador}/payment_list_<operador>.xlsx
+    (32 columnas del diccionario de dispersión) y un manifiesto SHA-256. En producción el destino es Azure Storage
+    con política de inmutabilidad; aquí es OneLake Files (sin inmutabilidad). Devuelve el manifiesto."""
     manifest = []
-    for (operator, source), rows in sorted(files.items()):
+    for operator, rows in sorted(files.items()):
         folder = os.path.join(root, cycle_id, operator)
         os.makedirs(folder, exist_ok=True)
-        data = _csv_bytes(rows)
-        name = f"payment_list_{operator}_{source}.csv"
+        data = dispersal.xlsx_bytes([dispersal.to_dispersal_row(r) for r in rows])
+        name = f"payment_list_{operator}.xlsx"
         with open(os.path.join(folder, name), "wb") as f:
             f.write(data)
-        manifest.append({"file": f"{operator}/{name}", "rows": len(rows),
-                           "sha256": sha256_bytes(data)})
+        manifest.append({"file": f"{operator}/{name}", "rows": len(rows), "sha256": sha256_bytes(data)})
     with open(os.path.join(root, cycle_id, "manifest_sha256.csv"), "wb") as f:
         f.write(_csv_bytes(manifest))
     return manifest

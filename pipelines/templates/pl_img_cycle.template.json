@@ -1,0 +1,1214 @@
+{
+    "name": "pl_img_cycle",
+    "properties": {
+        "parameters": {
+            "cycle_id": {
+                "type": "String",
+                "defaultValue": "2026-09-r1"
+            },
+            "cutoff": {
+                "type": "String",
+                "defaultValue": "cutoff1"
+            },
+            "cutoff_date": {
+                "type": "String",
+                "defaultValue": "2026-09-30"
+            }
+        },
+        "activities": [
+            {
+                "name": "init",
+                "type": "TridentNotebook",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_init_cycle}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "cutoff": {
+                            "value": {
+                                "value": "@pipeline().parameters.cutoff",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "cutoff_date": {
+                            "value": {
+                                "value": "@pipeline().parameters.cutoff_date",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "orch_e1",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "init",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_orch_e1}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "ctl_c1_summary",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "orch_e1",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_ctl_summary}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C1",
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "approval_c1",
+                "type": "Approval",
+                "dependsOn": [
+                    {
+                        "activity": "ctl_c1_summary",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.00:30:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "operationType": "ApprovalGroupChatMessage",
+                    "approvers": "{{APPROVERS}}",
+                    "approvalRequestTitle": {
+                        "value": "@concat('Aprobacion control C1 - ciclo ', pipeline().parameters.cycle_id)",
+                        "type": "Expression"
+                    },
+                    "description": {
+                        "value": "@concat('Resumen del control C1 (ciclo ', pipeline().parameters.cycle_id, '): ', string(activity('ctl_c1_summary').output.result.exitValue))",
+                        "type": "Expression"
+                    },
+                    "chatId": "{{TEAMS_CHAT_ID}}"
+                },
+                "externalReferences": {
+                    "connection": "{{TEAMS_CONNECTION_ID}}"
+                }
+            },
+            {
+                "name": "record_c1",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c1",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C1",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": "APPROVED",
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "reject_c1",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c1",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C1",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": {
+                                "value": "@if(contains(string(activity('approval_c1').error), 'ActionTimedOut'), 'EXPIRED', 'REJECTED')",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "fail_c1",
+                "type": "Fail",
+                "dependsOn": [
+                    {
+                        "activity": "reject_c1",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "message": {
+                        "value": "@activity('approval_c1').error.message",
+                        "type": "Expression"
+                    },
+                    "errorCode": "500"
+                }
+            },
+            {
+                "name": "orch_e2",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "record_c1",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_orch_e2}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "ctl_c2_summary",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "orch_e2",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_ctl_summary}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C2",
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "approval_c2",
+                "type": "Approval",
+                "dependsOn": [
+                    {
+                        "activity": "ctl_c2_summary",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.00:30:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "operationType": "ApprovalGroupChatMessage",
+                    "approvers": "{{APPROVERS}}",
+                    "approvalRequestTitle": {
+                        "value": "@concat('Aprobacion control C2 - ciclo ', pipeline().parameters.cycle_id)",
+                        "type": "Expression"
+                    },
+                    "description": {
+                        "value": "@concat('Resumen del control C2 (ciclo ', pipeline().parameters.cycle_id, '): ', string(activity('ctl_c2_summary').output.result.exitValue))",
+                        "type": "Expression"
+                    },
+                    "chatId": "{{TEAMS_CHAT_ID}}"
+                },
+                "externalReferences": {
+                    "connection": "{{TEAMS_CONNECTION_ID}}"
+                }
+            },
+            {
+                "name": "record_c2",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c2",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C2",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": "APPROVED",
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "reject_c2",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c2",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C2",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": {
+                                "value": "@if(contains(string(activity('approval_c2').error), 'ActionTimedOut'), 'EXPIRED', 'REJECTED')",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "fail_c2",
+                "type": "Fail",
+                "dependsOn": [
+                    {
+                        "activity": "reject_c2",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "message": {
+                        "value": "@activity('approval_c2').error.message",
+                        "type": "Expression"
+                    },
+                    "errorCode": "500"
+                }
+            },
+            {
+                "name": "orch_settlement",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "record_c2",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_orch_settlement}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "ctl_c3_summary",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "orch_settlement",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_ctl_summary}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C3",
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "approval_c3",
+                "type": "Approval",
+                "dependsOn": [
+                    {
+                        "activity": "ctl_c3_summary",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.00:30:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "operationType": "ApprovalGroupChatMessage",
+                    "approvers": "{{APPROVERS}}",
+                    "approvalRequestTitle": {
+                        "value": "@concat('Aprobacion control C3 - ciclo ', pipeline().parameters.cycle_id)",
+                        "type": "Expression"
+                    },
+                    "description": {
+                        "value": "@concat('Resumen del control C3 (ciclo ', pipeline().parameters.cycle_id, '): ', string(activity('ctl_c3_summary').output.result.exitValue))",
+                        "type": "Expression"
+                    },
+                    "chatId": "{{TEAMS_CHAT_ID}}"
+                },
+                "externalReferences": {
+                    "connection": "{{TEAMS_CONNECTION_ID}}"
+                }
+            },
+            {
+                "name": "record_c3",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c3",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C3",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": "APPROVED",
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "reject_c3",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c3",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C3",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": {
+                                "value": "@if(contains(string(activity('approval_c3').error), 'ActionTimedOut'), 'EXPIRED', 'REJECTED')",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "fail_c3",
+                "type": "Fail",
+                "dependsOn": [
+                    {
+                        "activity": "reject_c3",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "message": {
+                        "value": "@activity('approval_c3').error.message",
+                        "type": "Expression"
+                    },
+                    "errorCode": "500"
+                }
+            },
+            {
+                "name": "orch_payment_lists",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "record_c3",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_orch_payment_lists}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "ctl_c4_summary",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "orch_payment_lists",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_ctl_summary}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C4",
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "approval_c4",
+                "type": "Approval",
+                "dependsOn": [
+                    {
+                        "activity": "ctl_c4_summary",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.00:30:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "operationType": "ApprovalGroupChatMessage",
+                    "approvers": "{{APPROVERS}}",
+                    "approvalRequestTitle": {
+                        "value": "@concat('Aprobacion control C4 - ciclo ', pipeline().parameters.cycle_id)",
+                        "type": "Expression"
+                    },
+                    "description": {
+                        "value": "@concat('Resumen del control C4 (ciclo ', pipeline().parameters.cycle_id, '): ', string(activity('ctl_c4_summary').output.result.exitValue))",
+                        "type": "Expression"
+                    },
+                    "chatId": "{{TEAMS_CHAT_ID}}"
+                },
+                "externalReferences": {
+                    "connection": "{{TEAMS_CONNECTION_ID}}"
+                }
+            },
+            {
+                "name": "record_c4",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c4",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C4",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": "APPROVED",
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "reject_c4",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "approval_c4",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_record_approval}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "control": {
+                            "value": "C4",
+                            "type": "string"
+                        },
+                        "decision": {
+                            "value": {
+                                "value": "@if(contains(string(activity('approval_c4').error), 'ActionTimedOut'), 'EXPIRED', 'REJECTED')",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "approver": {
+                            "value": "{{APPROVERS}}",
+                            "type": "string"
+                        },
+                        "mechanism": {
+                            "value": "approval_activity",
+                            "type": "string"
+                        },
+                        "decided_at": {
+                            "value": {
+                                "value": "@utcNow()",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "fail_c4",
+                "type": "Fail",
+                "dependsOn": [
+                    {
+                        "activity": "reject_c4",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "message": {
+                        "value": "@activity('approval_c4').error.message",
+                        "type": "Expression"
+                    },
+                    "errorCode": "500"
+                }
+            },
+            {
+                "name": "publish",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "record_c4",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.01:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "{{NOTEBOOK_ID:nb_07_publish}}",
+                    "workspaceId": "{{WORKSPACE_ID}}",
+                    "parameters": {
+                        "cycle_id": {
+                            "value": {
+                                "value": "@pipeline().parameters.cycle_id",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "execution_id": {
+                            "value": null,
+                            "type": "string"
+                        },
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

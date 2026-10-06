@@ -87,3 +87,77 @@ def test_check_graph_rejects_dangling_dependencies_and_cycles():
         pt.check_graph(pipe({"a": ["zzz"]}))
     with pytest.raises(ValueError):
         pt.check_graph(pipe({"a": ["b"], "b": ["a"]}))
+
+
+# ---- pl_img_cycle ----
+CYCLE_NBS = ["nb_init_cycle", "nb_orch_e1", "nb_orch_e2", "nb_orch_settlement", "nb_orch_payment_lists",
+             "nb_ctl_summary", "nb_record_approval", "nb_07_publish"]
+CYCLE_CFG = {**CFG, "notebook_ids": {n: f"{i:08d}-0000-0000-0000-000000000000" for i, n in enumerate(CYCLE_NBS, 1)}}
+CYCLE_TEMPLATE = (pt.TEMPLATES / "pl_img_cycle.template.json").read_text(encoding="utf-8")
+
+
+def _cycle():
+    return {a["name"]: a for a in json.loads(pt.render(CYCLE_TEMPLATE, CYCLE_CFG))["properties"]["activities"]}
+
+
+def _notebook_params(py_name):
+    """Variables asignadas en la celda «Parámetros» de un cuaderno .py."""
+    import re
+    text = (ROOT / "notebooks" / f"{py_name}.py").read_text(encoding="utf-8")
+    cell = text.split("# %% Parámetros", 1)[1].split("# %%", 1)[0]
+    return set(re.findall(r"^([A-Za-z_]\w*)\s*=", cell, re.M))
+
+
+def test_cycle_render_is_valid_json_and_complete():
+    acts = _cycle()
+    assert not pt.PLACEHOLDER.findall(json.dumps(acts))
+    assert pt.missing_notebooks(CYCLE_TEMPLATE, CYCLE_CFG) == []
+    assert set(pt.missing_notebooks(CYCLE_TEMPLATE, CFG)) == set(CYCLE_NBS)
+
+
+def test_cycle_order_follows_design():
+    acts = _cycle()
+    chain = ["init", "orch_e1", "ctl_c1_summary", "approval_c1", "record_c1", "orch_e2", "ctl_c2_summary",
+             "approval_c2", "record_c2", "orch_settlement", "ctl_c3_summary", "approval_c3", "record_c3",
+             "orch_payment_lists", "ctl_c4_summary", "approval_c4", "record_c4", "publish"]
+    for prev, cur in zip(chain, chain[1:], strict=False):
+        assert acts[cur]["dependsOn"] == [{"activity": prev, "dependencyConditions": ["Succeeded"]}], cur
+    assert acts["init"]["dependsOn"] == []
+    assert "report_final" not in acts      # nb_06_report corre dentro de DAG_PAYMENT_LISTS
+
+
+def test_cycle_report_is_inside_payment_lists_dag():
+    from img_lib.dag import DAG_PAYMENT_LISTS
+    assert "nb_06_report" in DAG_PAYMENT_LISTS
+
+
+def test_cycle_each_approval_has_failed_route_and_30_min_timeout():
+    acts = _cycle()
+    for c in "1234":
+        ap = acts[f"approval_c{c}"]
+        assert ap["type"] == "Approval" and ap["policy"]["timeout"] == "0.00:30:00"
+        assert acts[f"reject_c{c}"]["dependsOn"] == [{"activity": ap["name"], "dependencyConditions": ["Failed"]}]
+        assert acts[f"fail_c{c}"]["dependsOn"][0]["activity"] == f"reject_c{c}"
+        assert "ActionTimedOut" in acts[f"reject_c{c}"]["typeProperties"]["parameters"]["decision"]["value"]["value"]
+        assert acts[f"record_c{c}"]["typeProperties"]["parameters"]["decided_at"]["value"]["value"] == "@utcNow()"
+
+
+def test_cycle_parameters_exist_in_notebook_parameter_cells():
+    inv = {v: k for k, v in CYCLE_CFG["notebook_ids"].items()}
+    for name, a in _cycle().items():
+        if a["type"] != "TridentNotebook":
+            continue
+        nb = inv[a["typeProperties"]["notebookId"]]
+        passed = set(a["typeProperties"]["parameters"])
+        assert passed <= _notebook_params(nb), (name, passed - _notebook_params(nb))
+        assert "NOTEBOOK_VERSION" not in passed
+
+
+def test_cycle_pipeline_parameters_are_declared():
+    p = json.loads(pt.render(CYCLE_TEMPLATE, CYCLE_CFG))["properties"]["parameters"]
+    assert set(p) == {"cycle_id", "cutoff", "cutoff_date"}
+
+
+def test_parse_ids_text_ignores_noise():
+    got = pt.parse_ids_text("nb_a 33333333-3333-3333-3333-333333333333\nruido\nnb_b  44444444-4444-4444-4444-444444444444\n")
+    assert got == {"nb_a": "33333333-3333-3333-3333-333333333333", "nb_b": "44444444-4444-4444-4444-444444444444"}

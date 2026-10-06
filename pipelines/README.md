@@ -20,7 +20,9 @@ nuevo por corrida (p. ej. `2026-09-r1`): repetirlo duplica filas.
 | 14 | `orch_payment_lists` | Notebook `nb_orch_payment_lists` | `cycle_id` | Falla |
 | 15–18 | C4 | `nb_ctl_summary` (`control=C4`) → aprobación → registrar | | |
 | 19 | `publish` | Notebook `nb_07_publish` | `cycle_id` | Falla (no publica si falta un control aprobado) |
-| 20 | `report_final` | Notebook `nb_06_report` | `cycle_id` | Falla |
+| 20 | ~~`report_final`~~ | **No se genera** | | `nb_06_report` ya corre dentro de `nb_orch_payment_lists` (`DAG_PAYMENT_LISTS` en `img_lib/dag.py`); repetirlo duplicaría el informe. Desviación respecto al diseño original. |
+
+La plantilla generada (`templates/pl_img_cycle.template.json`) tiene 26 actividades: las 20 de arriba menos `report_final`, más una actividad `Fail` por control (`fail_c1`..`fail_c4`) tras cada `reject_cX`. Orden: `init` → `orch_e1` → C1 → `orch_e2` → C2 → `orch_settlement` → C3 → `orch_payment_lists` → C4 → `publish`, donde cada control es `ctl_cX_summary` → `approval_cX` → `record_cX` (y `approval_cX` Failed → `reject_cX` → `fail_cX`). Timeout de cada Approval: 30 min. No se pasa `NOTEBOOK_VERSION` desde el pipeline.
 
 **Mecanismo de aprobación (verificado con `pl_env_check_approval`, G10 cerrado)**
 - **Plan A:** actividad *Approval*, que está en **vista previa** (el nodo se titula «Aprobación (vista previa)»; Microsoft
@@ -45,14 +47,20 @@ nuevo por corrida (p. ej. `2026-09-r1`): repetirlo duplica filas.
     terminar la actividad; `mechanism = approval_activity`; `decision` según la tabla anterior.
   - **Premisa no verificada:** el equipo asume que solo el usuario designado puede aprobar; no se probó que otro miembro
     del chat no pueda. El documento (§23) debe declarar esta limitación y que la actividad está en vista previa.
-  - **Brecha conocida con `nb_record_approval`:** hoy ese cuaderno toma `decided_at` con `now()` dentro del cuaderno y no
-    lo recibe como parámetro; para cumplir la decisión hay que agregarlo (cambio de código fuera de esta guía).
+  - **`nb_record_approval` y `decided_at`:** cerrado: el cuaderno recibe `decided_at` (el pipeline pasa `@utcNow()`); si es `None` usa `now()`.
 - **Plan B** (respaldo si la vista previa cambia o hace falta certeza sobre quién decide): después de `ctl_cX_summary`,
   `Until` con `Wait` de 60 s y `Lookup` sobre `ctl.approvals` hasta que exista una decisión distinta de `PENDING` para
   ese control; el timeout del `Until` es el plazo. El aprobador ejecuta `nb_approve`, que toma la identidad de la
   sesión. Si vence, se registra `EXPIRED`. *No verificado en Fabric.*
 
-**No verificado (pendiente para generar `pl_img_cycle`):** cómo espera Fabric los parámetros de una actividad de
-cuaderno (`TridentNotebook`; la plantilla de `pl_env_check_approval` solo lleva `notebookId` y `workspaceId`, porque
-sus cuadernos no reciben parámetros) y el comportamiento de `runMultiple` dentro de un pipeline. Se necesita un JSON
-exportado de un pipeline con un cuaderno parametrizado.
+**Formato de parámetros de `TridentNotebook`** (tomado de un JSON exportado): en `typeProperties.parameters`,
+`{"cycle_id": {"value": {"value": "@pipeline().parameters.cycle_id", "type": "Expression"}, "type": "string"}}`; un literal va como `{"value": "C1", "type": "string"}`.
+
+**No verificado sin Fabric:** la expresión de la descripción del Approval (`@concat(..., string(@activity('ctl_cX_summary').output.result.exitValue))`; si el portal no admite expresiones ahí, usar texto fijo), el literal de parámetros fijos, `@utcNow()` como valor de parámetro, `ActionTimedOut` dentro de `string(error)`, la combinación de flechas, y el comportamiento de `runMultiple` dentro de un pipeline.
+
+## Obtener los IDs de cuaderno e importar `pl_img_cycle`
+1. En un cuaderno de Fabric: `for n in notebookutils.notebook.list(): print(n.displayName, n.id)` (si el atributo falla, `print(n)` y ajusta el texto a líneas «nombre id»). Copia la salida a un archivo local (p. ej. `ids.txt`, no se versiona).
+2. `python scripts/pipeline_tool.py ids-from-text ids.txt` (guarda en `pipelines/local.json`, ignorado por git; no imprime los IDs).
+3. `python scripts/pipeline_tool.py render pl_img_cycle` (falla listando los cuadernos que falten) → `output/pipelines/pl_img_cycle.json`.
+4. En Fabric crea un pipeline nuevo, abre el menú del lienzo, edita el JSON (pegar) y aplica. La importación sigue siendo manual ([issue #8](https://github.com/plazasgiovanny/img-poc-fabric/issues/8)).
+5. Importa de nuevo `nb_record_approval` (nuevo parámetro `decided_at`).

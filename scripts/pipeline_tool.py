@@ -9,6 +9,7 @@ Uso:
     python scripts/pipeline_tool.py list
     python scripts/pipeline_tool.py render pl_env_check_approval          # -> output/pipelines/<nombre>.json
     python scripts/pipeline_tool.py templatize exportado.json            # JSON del portal -> plantilla sin IDs
+    python scripts/pipeline_tool.py ids-from-text ids.txt                # líneas "nombre id" -> notebook_ids de local.json
 """
 import argparse
 import json
@@ -50,6 +51,22 @@ def resolve(key: str, arg, cfg: dict) -> str:
         return cfg[SIMPLE[key]]
     except KeyError:
         raise KeyError(f"falta '{SIMPLE[key]}' en pipelines/local.json") from None
+
+
+def missing_notebooks(template_text: str, cfg: dict) -> list:
+    """Nombres de cuaderno que la plantilla pide y que no están en notebook_ids."""
+    have = cfg.get("notebook_ids", {})
+    return sorted({arg for key, arg in placeholders_in(template_text) if key == "NOTEBOOK_ID" and arg not in have})
+
+
+def parse_ids_text(text: str) -> dict:
+    """Líneas "nombre id" (p. ej. la salida de notebookutils.notebook.list()) -> {nombre: id}. Ignora lo demás."""
+    ids = {}
+    for line in text.splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and GUID.fullmatch(parts[-1]):
+            ids[" ".join(parts[:-1])] = parts[-1]
+    return ids
 
 
 def check_graph(pipeline: dict) -> None:
@@ -109,6 +126,8 @@ def main(argv=None):
     sub.add_parser("list")
     r = sub.add_parser("render")
     r.add_argument("name")
+    i = sub.add_parser("ids-from-text")
+    i.add_argument("file")
     t = sub.add_parser("templatize")
     t.add_argument("file")
     t.add_argument("--name")
@@ -118,10 +137,24 @@ def main(argv=None):
         for p in sorted(TEMPLATES.glob("*.template.json")):
             print(p.name.removesuffix(".template.json"))
     elif a.cmd == "render":
-        out = render((TEMPLATES / f"{a.name}.template.json").read_text(encoding="utf-8"), load_local())
+        template = (TEMPLATES / f"{a.name}.template.json").read_text(encoding="utf-8")
+        cfg = load_local()
+        missing = missing_notebooks(template, cfg)
+        if missing:
+            names = "\n  ".join(missing)
+            raise SystemExit(f"faltan {len(missing)} ids de cuaderno en pipelines/local.json (notebook_ids):\n  {names}\n"
+                             "Obtenlos con notebookutils.notebook.list() y corre: "
+                             "python scripts/pipeline_tool.py ids-from-text <archivo>")
+        out = render(template, cfg)
         OUTPUT.mkdir(parents=True, exist_ok=True)
         (OUTPUT / f"{a.name}.json").write_text(out, encoding="utf-8")
         print(f"listo: {OUTPUT / (a.name + '.json')}  (pégalo en la vista de código JSON del pipeline)")
+    elif a.cmd == "ids-from-text":
+        found = parse_ids_text(pathlib.Path(a.file).read_text(encoding="utf-8"))
+        cfg = load_local()
+        cfg.setdefault("notebook_ids", {}).update(found)
+        LOCAL.write_text(json.dumps(cfg, indent=4, ensure_ascii=False) + chr(10), encoding="utf-8")
+        print(f"{len(found)} ids guardados en pipelines/local.json (no se muestran)")
     else:
         exported = json.loads(pathlib.Path(a.file).read_text(encoding="utf-8"))
         name = a.name or exported["name"]

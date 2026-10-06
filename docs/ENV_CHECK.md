@@ -135,3 +135,5 @@ con 500 registros. La premisa de que solo el usuario designado puede aprobar tam
 | `No default context found, please attach a lakehouse before running spark sql queries with partial namespaces` | El cuaderno no tenía lakehouse por defecto | Agregar `lh_control` y pulsar **Establecer como predeterminado** |
 | `ModuleNotFoundError: img_lib` | El Environment estaba sin publicar o sin adjuntar al cuaderno, o la sesión era anterior | Publicar, adjuntar y **reiniciar la sesión** |
 | HTTP 400 al leer o escribir `Files/...` | Ruta relativa sin lakehouse por defecto | Fijar el lakehouse por defecto, o usar la ruta `abfss://` completa |
+
+Después de una corrida completa de la cadena, `nb_measure` (parámetro `cycle_id`, lakehouse por defecto `lh_control`, requiere los datos sintéticos de §3) imprime el resumen del Experimento 2 y guarda `Files/measurements/<cycle_id>.json`; no escribe tablas.

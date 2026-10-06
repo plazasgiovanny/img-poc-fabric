@@ -8,7 +8,7 @@ Las reglas de focalización, bloqueo y titular vienen del equipo de la fuente; l
 |---|---|---|
 | D1 | Identidad de una persona = tipo + número de documento. «Existe en inhumados» = hay una fila con el mismo tipo y número (mismo número con otro tipo no cruza). | `mdm.match_key`, regla `BLOCK_DECEASED_REGISTRY` |
 | D2 | Vigencia RENEC nula o ausente no bloquea; 0 y 12 son vigentes; cualquier otro código bloquea (operador `NOT IN`, nulo no cumple). | `settlement._matches`, `BLOCK_RENEC` |
-| D3 | Titular del hogar: mayor de edad (>= 18) y no bloqueada (obligatorios); luego mujer (`RSH_sexo_persona` = 2), luego bancarizada (`SIS_bancarizado` = 1) como preferencia, no descarte; desempate por mayor edad y número de documento ascendente. | `param.holder_rule`, `settlement.select_holder` |
+| D3 | Titular del hogar: mayor de edad (>= 18) y elegible, es decir focalizada (grupo SISBEN A) y no bloqueada (obligatorios; criterio `is_eligible`, antes `is_not_blocked`: el titular se escoge entre elegibles, no entre todas las no bloqueadas); luego mujer (`RSH_sexo_persona` = 2), luego bancarizada (`SIS_bancarizado` = 1) como preferencia, no descarte; desempate por mayor edad y número de documento ascendente. | `param.holder_rule`, `settlement.select_holder` |
 | D4 | La focalización es por persona (`RSH_grupo_S4 = '1. SISBEN IV - A'`); un hogar sin integrante elegible adulto queda sin titular. | `param.targeting_criteria` |
 | D5 | Tipo de documento: la maestra usa su catálogo (1 CC, 2 TI, 3 CE, 4 RC...) y el listado de dispersión otro (1 RC, 2 TI, 3 CC, 4 CE...); la equivalencia es una tabla explícita y probada. | `mapping.MASTER_TO_DISPERSAL_DOC_TYPE` |
 | D6 | Listado: un `.xlsx` por operador, 32 columnas en orden, con los valores por defecto del diccionario (0, `SIN INFORMACION`, 999, `ZZ- SIN INFORMACION`); monto parametrizable en `param.amounts` (120000 por el diccionario). | `img_lib.dispersal` |
@@ -17,6 +17,7 @@ Las reglas de focalización, bloqueo y titular vienen del equipo de la fuente; l
 | D9 | No se aplica bloqueo por edad: los menores no se descartan de la base, simplemente no pueden ser titulares. |  |
 | D10 | Campos sin fuente en la PoC (UPZ, celular, cuenta, grupo/puntaje/clasificación SISBEN del listado, tipo de beneficiario, parqueadero) salen con el valor por defecto o vacíos del diccionario. | `dispersal.to_dispersal_row` |
 | D11 | Plata valida las fechas contra la fecha de corte del ciclo (`ctl.cycle.cutoff_date`), no contra `date.today()`, para ser determinista entre corridas; `is_adult` sigue usando `SIS_edad` (edad oficial de la maestra al corte, un dato de la fuente) y se elimina `age_from_birth` por ser código sin uso. | `nb_e1_silver` |
+| D12 | El informe y el resumen de C4 incluyen `households_without_holder`: hogares con alguna persona elegible pero sin titular (ninguna elegible es adulta); quedan sin pago por diseño (D4). | `settlement.households_without_holder`, `build_report` |
 
 Valores de demostración (`is_illustrative = 1`): operadores habilitados y su prioridad, fuente de financiación y techo, y partición de
 los listados. Los datos son sintéticos (semilla fija) y no se versionan.

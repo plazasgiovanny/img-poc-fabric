@@ -112,7 +112,7 @@ Implementado en `img_lib.mapping`. Bronce conserva los nombres crudos; Plata (`n
 Base de cruces: sin `address`, `sisben_subgroup` ni `survey_date` (no vienen en las columnas que usa la PoC); nuevas `sex`, `age`,
 `banked`, `renec_validity`, `death_date`, `locality_name`, partes del nombre. `validation_value` = `DECEASED` cuando la persona existe en inhumados.
 
-Reglas (`param.*`): `holder_rule.criterion` ∈ `is_adult`, `is_not_blocked`, `is_woman`, `is_banked`, `age`, `doc_number`;
+Reglas (`param.*`): `holder_rule.criterion` ∈ `is_adult`, `is_eligible` (elegible = focalizada y no bloqueada), `is_woman`, `is_banked`, `age`, `doc_number`;
 `sort_direction` ∈ `ASC`, `DESC` (ordenan) y `REQUIRED` (filtra). Operador de regla: `=`, `!=`, `IN`, `NOT IN`.
 `param.payment_list_partition.split_by` = `operator`. Causales: `RENEC_NOT_VALID`, `IN_DECEASED_REGISTRY`, `NOT_MET_SISBEN_GROUP_A`.
 

@@ -21,7 +21,7 @@ BLOCK_RULES = [
 # sort_direction: ASC / DESC ordenan; REQUIRED exige que el criterio sea verdadero (filtro del titular).
 HOLDER_RULE = [
     {"rank": 1, "criterion": "is_adult", "sort_direction": "REQUIRED", **_VALIDITY},
-    {"rank": 2, "criterion": "is_not_blocked", "sort_direction": "REQUIRED", **_VALIDITY},
+    {"rank": 2, "criterion": "is_eligible", "sort_direction": "REQUIRED", **_VALIDITY},
     {"rank": 3, "criterion": "is_woman", "sort_direction": "DESC", **_VALIDITY},
     {"rank": 4, "criterion": "is_banked", "sort_direction": "DESC", **_VALIDITY},
     {"rank": 5, "criterion": "age", "sort_direction": "DESC", **_VALIDITY},

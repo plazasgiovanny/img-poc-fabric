@@ -10,7 +10,7 @@ La PoC ya trabaja con el esquema real de las fuentes (diccionarios y reglas entr
 | G2 | Las dos fuentes concretas y su diccionario de datos | Base maestra (`RSH_*`/`SIS_*`) e inhumados; mapeo en `img_lib.mapping` y [`NAMING.md`](NAMING.md) | Jhon | **Cerrado** con la información de Jhon; detalle en D1 y D10 de `DESIGN_DECISIONS.md` |
 | G3 | Criterios de focalización | `RSH_grupo_S4 = '1. SISBEN IV - A'` (`param.targeting_criteria`) | Jhon | **Cerrado** |
 | G4 | Reglas de bloqueo | `RSH_vigencia_renec NOT IN (0,12)` y existencia en inhumados (`param.block_rules`) | Jhon | **Cerrado** para estas dos reglas; semántica de nulos en D2 |
-| G5 | Regla de selección de titular | Adulta, no bloqueada, mujer, bancarizada; desempate por edad y documento (`param.holder_rule`) | Jhon | **Cerrado**; la lectura de «bancarizada» como preferencia está en D3 |
+| G5 | Regla de selección de titular | Adulta, elegible (focalizada y no bloqueada), mujer, bancarizada; desempate por edad y documento (`param.holder_rule`) | Jhon | **Cerrado**; la lectura de «bancarizada» como preferencia está en D3 |
 | G6 | Regla de coincidencia/supervivencia del MDM (umbrales) | Identidad por tipo + número; prevalece la fuente poblacional (`img_lib.mdm`) | Jhon | Parcial: falta confirmar umbrales de coincidencia aproximada |
 | G7 | Estructura del listado por operador | 32 columnas del diccionario de dispersión, un `.xlsx` por operador (`img_lib.dispersal`) | Jhon | **Cerrado**; D5-D8 y D10 |
 | G8 | Plazo y canal de cada control | 30 min en la demo (el portal exige un mínimo de 10 min en la actividad Approval) | Equipo | Abierto |

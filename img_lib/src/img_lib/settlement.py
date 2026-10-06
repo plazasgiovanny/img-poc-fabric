@@ -45,12 +45,12 @@ def target(base, criteria, block_rules):
 
 
 # nb_01_holder: un titular por hogar. Criterios (param.holder_rule, en orden): REQUIRED filtra
-# (mayor de edad, no bloqueada); ASC/DESC ordena (mujer, bancarizada, mayor edad, número de documento).
+# (mayor de edad, elegible = focalizada y no bloqueada); ASC/DESC ordena (mujer, bancarizada, mayor edad, número de documento).
 def _derived(member, eligible, criterion):
     if criterion == "is_adult":
         age = member.get("age")
         return int(age is not None and int(age) >= mapping.ADULT_AGE)
-    if criterion == "is_not_blocked":
+    if criterion == "is_eligible":  # elegible = cumple focalización (grupo SISBEN A) y no tiene causal de bloqueo
         return int(eligible)
     if criterion == "is_woman":
         return int(str(member.get("sex")) == mapping.SEX_WOMAN)
@@ -63,6 +63,12 @@ def _derived(member, eligible, criterion):
 def _sort_key(value, descending):
     # los nulos van siempre al final
     return (value is not None, value) if descending else (value is None, 0 if value is None else value)
+
+
+def households_without_holder(targeting, holders) -> int:
+    """Hogares con al menos una persona elegible pero sin titular (ninguna elegible es adulta)."""
+    with_holder = {t["household_id"] for t in holders}
+    return len({f["household_id"] for f in targeting if f["eligible"]} - with_holder)
 
 
 def select_holder(targeting, base, holder_rule):
@@ -205,7 +211,8 @@ def build_report(*, cycle_id, cutoff_date, source_versions, applied_params, note
         "uses_illustrative_params": has_illustrative(applied),
         "notebook_versions": notebook_versions,
         "counts": {"universe": len(base), "eligible": sum(1 for f in targeting if f["eligible"]),
-                    "holders": len(holders), "settled_payments": len(payments)},
+                    "holders": len(holders), "settled_payments": len(payments),
+                    "households_without_holder": households_without_holder(targeting, holders)},
         "exclusions_by_reason": dict(exclusions),
         "totals_by_operator": {k[1]: v for k, v in totals.items() if k[0] == "operator"},
         "totals_by_source": {k[1]: v for k, v in totals.items() if k[0] == "source"},

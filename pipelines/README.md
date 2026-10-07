@@ -2,7 +2,7 @@
 
 > Inventario de pipelines, plantillas JSON sin IDs y la herramienta para generarlos: [`INVENTORY.md`](INVENTORY.md).
 
-El pipeline se versionará aquí como JSON (`pl_img_cycle.json`); la intención es generarlo con `scripts/pipeline_tool.py` a partir de una plantilla (ver [`INVENTORY.md`](INVENTORY.md)). **`pl_img_cycle` todavía no existe**: esta guía fija la estructura que debe tener (§18.3 y §19).
+El pipeline se versiona como plantilla JSON sin IDs (`templates/pl_img_cycle.template.json`) y se genera con `scripts/pipeline_tool.py` (ver [`INVENTORY.md`](INVENTORY.md)). **`pl_img_cycle` está importado y se ejecutó completo en Fabric** (6 de octubre de 2026, ciclo `2026-10g`, con las 4 aprobaciones, 1.905 s ≈ 31,8 min). Esta guía fija su estructura (§18.3 y §19).
 
 **Parámetros del pipeline:** `cycle_id`, `cutoff` (`cutoff1` o `cutoff2`), `cutoff_date`. Usar un `cycle_id`
 nuevo por corrida (p. ej. `2026-09-r1`): repetirlo duplica filas.
@@ -45,7 +45,7 @@ La plantilla generada (`templates/pl_img_cycle.template.json`) tiene 26 activida
     (verificado). Si una actividad recibe varias flechas de entrada, se combinan con «y» (comportamiento de Data Factory; **no verificado en Fabric**).
   - **Qué se registra en `ctl.approvals`:** `approver` = el valor de `approvers` configurado; `decided_at` = `utcNow()` al
     terminar la actividad; `mechanism = approval_activity`; `decision` según la tabla anterior.
-  - **Premisa no verificada:** el equipo asume que solo el usuario designado puede aprobar; no se probó que otro miembro
+  - **Premisa no verificada (sigue sin verificar):** el equipo asume que solo el usuario designado puede aprobar; no se probó que otro miembro
     del chat no pueda. El documento (§23) debe declarar esta limitación y que la actividad está en vista previa.
   - **`nb_record_approval` y `decided_at`:** cerrado: el cuaderno recibe `decided_at` (el pipeline pasa `@utcNow()`); si es `None` usa `now()`.
 - **Plan B** (respaldo si la vista previa cambia o hace falta certeza sobre quién decide): después de `ctl_cX_summary`,
@@ -56,7 +56,9 @@ La plantilla generada (`templates/pl_img_cycle.template.json`) tiene 26 activida
 **Formato de parámetros de `TridentNotebook`** (tomado de un JSON exportado): en `typeProperties.parameters`,
 `{"cycle_id": {"value": {"value": "@pipeline().parameters.cycle_id", "type": "Expression"}, "type": "string"}}`; un literal va como `{"value": "C1", "type": "string"}`.
 
-**No verificado sin Fabric:** la expresión de la descripción del Approval (`@concat(..., string(@activity('ctl_cX_summary').output.result.exitValue))`; si el portal no admite expresiones ahí, usar texto fijo), el literal de parámetros fijos, `@utcNow()` como valor de parámetro, `ActionTimedOut` dentro de `string(error)`, la combinación de flechas, y el comportamiento de `runMultiple` dentro de un pipeline.
+**Verificado en Fabric (ejecución de `2026-10g`):** el formato de parámetros de `TridentNotebook`, `runMultiple` dentro de un pipeline, las expresiones dinámicas (`@pipeline().parameters`, `RunId`, `utcNow()`) y la actividad Approval con sus 4 controles. De las 26 actividades se ejecutaron 18; las 8 de rechazo/fallo (`reject_cX`, `fail_cX`) no se activaron.
+
+**Sigue sin verificar:** la ruta de rechazo o vencimiento dentro de `pl_img_cycle` (solo se probó en `pl_env_check_approval`), la premisa de que solo el aprobador designado puede aprobar, `ActionTimedOut` dentro de `string(error)` y la combinación de flechas.
 
 ## Obtener los IDs de cuaderno e importar `pl_img_cycle`
 1. En un cuaderno de Fabric: `for n in notebookutils.notebook.list(): print(n.displayName, n.id)` (si el atributo falla, `print(n)` y ajusta el texto a líneas «nombre id»). Copia la salida a un archivo local (p. ej. `ids.txt`, no se versiona).
@@ -64,3 +66,9 @@ La plantilla generada (`templates/pl_img_cycle.template.json`) tiene 26 activida
 3. `python scripts/pipeline_tool.py render pl_img_cycle` (falla listando los cuadernos que falten) → `output/pipelines/pl_img_cycle.json`.
 4. En Fabric crea un pipeline nuevo, abre el menú del lienzo, edita el JSON (pegar) y aplica. La importación sigue siendo manual ([issue #8](https://github.com/plazasgiovanny/img-poc-fabric/issues/8)).
 5. Importa de nuevo `nb_record_approval` (nuevo parámetro `decided_at`).
+
+## Lecciones de la ejecución en Fabric
+- **Los IDs de los cuadernos cambian al reimportar un cuaderno.** Hay que volver a listar los IDs (`for n in notebookutils.notebook.list(): print(n.displayName, n.id)`), ejecutar `ids-from-text` y re-renderizar y pegar el pipeline. Un ID viejo falla con 401 «User is not authorized to access this artifact».
+- **Todo cuaderno reimportado necesita `lh_control` como lakehouse por defecto.**
+- **Brecha conocida en `nb_record_approval`:** escribe `requested_at` con su propia hora en las filas `APPROVED`, que queda posterior a `decided_at`. Por eso el tiempo de revisión se calcula como `decided_at` (APPROVED) − `requested_at` (PENDING). Corrección pendiente: copiar el `requested_at` de la fila PENDING.
+- **Cada actividad Notebook del pipeline arranca su propia sesión de Spark** (≈1–1,5 min cada una; p. ej. 4 min 21 s de sesiones solo en los 4 `nb_record_approval`). Es el grueso de la diferencia entre ≈5 min de cadena de cuadernos y ≈32 min del pipeline. Mejora: reutilizar sesiones (sesión de alta concurrencia).

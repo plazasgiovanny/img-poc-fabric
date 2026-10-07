@@ -8,7 +8,7 @@ rellena con un script. Así se revisa en un PR, se reproduce y no se arma a mano
 | Pipeline | Para qué sirve | Plantilla | Cuadernos | Conexiones | Estado |
 |---|---|---|---|---|---|
 | `pl_env_check_approval` | Probar la actividad **Approval** (pendiente G10) | `templates/pl_env_check_approval.template.json` | `nb_env_check_child_a`, `nb_env_check_child_b` | Teams (conexión + chat) | **Verificado** (G10 cerrado) |
-| `pl_img_cycle` | Ciclo completo: ingesta, cruces, liquidación, 4 controles y publicación | `templates/pl_img_cycle.template.json` (26 actividades; diseño en [`README.md`](README.md)) | `nb_init_cycle`, `nb_orch_e1`, `nb_orch_e2`, `nb_orch_settlement`, `nb_orch_payment_lists`, `nb_ctl_summary`, `nb_record_approval`, `nb_07_publish` (sin `report_final`: `nb_06_report` corre dentro de `nb_orch_payment_lists`) | Teams (conexión + chat) | **Plantilla generada, sin probar en Fabric** |
+| `pl_img_cycle` | Ciclo completo: ingesta, cruces, liquidación, 4 controles y publicación | `templates/pl_img_cycle.template.json` (26 actividades; diseño en [`README.md`](README.md)) | `nb_init_cycle`, `nb_orch_e1`, `nb_orch_e2`, `nb_orch_settlement`, `nb_orch_payment_lists`, `nb_ctl_summary`, `nb_record_approval`, `nb_07_publish` (sin `report_final`: `nb_06_report` corre dentro de `nb_orch_payment_lists`) | Teams (conexión + chat) | **Importado y ejecutado completo en Fabric** (6 de octubre de 2026, ciclo `2026-10g`, 4 aprobaciones, 1.905 s ≈ 31,8 min; 18 de 26 actividades ejecutadas, las 8 de rechazo/fallo no se activaron) |
 
 ### Qué está verificado de `pl_env_check_approval` (G10, 3 de octubre de 2026)
 La plantilla se importó a Fabric sin cambios y se ejecutó tres veces:
@@ -38,7 +38,7 @@ La salida de `Approval1` **no trae** quién decidió ni cuándo; la entrada solo
 **Cómo se decide y qué se asume.** El mensaje que llega al chat de Teams es solo un **aviso** (`[APPROVAL REQUIRED] … Approver: <correo> … View request on Fabric`): no trae botones y la decisión se toma en Fabric, en el enlace, donde el usuario ya está autenticado. El equipo parte de que solo el usuario designado en `approvers` puede aprobar, y de ahí se infiere quién aprobó. **Esa premisa del equipo no se ha verificado con una prueba** (por ejemplo, que otro miembro del chat abra el enlace e intente aprobar). Si se necesita certeza, el plan B (`nb_approve`) toma la identidad de la sesión. El documento (§23) debe declarar esta limitación y que la actividad está en vista previa.
 
 ### Qué no está verificado de `pl_img_cycle`
-La plantilla no se ha importado a Fabric. Sin verificar: expresión de la descripción del Approval, literal de parámetros fijos, `@utcNow()` como parámetro y `runMultiple` dentro de un pipeline. Pasos para generarlo e importarlo: [`README.md`](README.md#obtener-los-ids-de-cuaderno-e-importar-pl_img_cycle).
+La plantilla se importó y se ejecutó completa en Fabric. Verificado: formato de parámetros de `TridentNotebook`, `runMultiple` dentro de un pipeline, expresiones dinámicas (`@pipeline().parameters`, `RunId`, `utcNow()`) y Approval con 4 controles. Sin verificar: la ruta de rechazo o vencimiento dentro de `pl_img_cycle` y la premisa de que solo el aprobador designado puede aprobar. Lecciones de la ejecución (IDs que cambian al reimportar, sesiones de Spark): [`README.md`](README.md#lecciones-de-la-ejecución-en-fabric). Pasos para generarlo e importarlo: [`README.md`](README.md#obtener-los-ids-de-cuaderno-e-importar-pl_img_cycle).
 
 ## Cómo se usa
 

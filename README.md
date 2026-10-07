@@ -23,7 +23,7 @@ reproducibilidad (misma semilla, mismos datos) y menos pasos manuales entre la f
 | `notebooks/` | 27 cuadernos de Fabric como `.py` (celdas `# %%`; el paquete los convierte a `.ipynb`): 23 de la cadena, 3 de verificación del entorno y `nb_measure` (mide un ciclo para el Experimento 2: tiempos, embudo, calidad contra la verdad conocida, trazabilidad; guarda `Files/measurements/<cycle_id>.json` en `lh_control`, solo lee; lógica en `img_lib.measure`) |
 | `ddl/` | Esquemas `ctl.*` y `param.*` y parámetros ilustrativos (Spark SQL) |
 | `generator/` | Generador determinista de datos sintéticos con defectos inyectados y verdad conocida |
-| `scripts/` | `prepare_package.py` (arma el paquete para subir a Fabric) y `pipeline_tool.py` (genera pipelines desde plantillas) |
+| `scripts/` | `prepare_package.py` (arma el paquete para subir a Fabric), `notebook_tool.py` (convierte los `.py` a `.ipynb`) y `pipeline_tool.py` (render, templatize e ids-from-text de pipelines) |
 | `pipelines/` | [Inventario](pipelines/INVENTORY.md), plantillas JSON sin IDs y [guía de `pl_img_cycle`](pipelines/README.md) |
 | `tests/` | pytest de la lógica pura (normalización, MDM contra la verdad, bitácora, generador, plantillas de pipelines) |
 | `docs/` | [Pendientes](docs/OPEN_ITEMS.md), [decisiones de diseño](docs/DESIGN_DECISIONS.md), [verificación del entorno](docs/ENV_CHECK.md), [nombres](docs/NAMING.md), [historial](docs/timeline.html) |
@@ -36,21 +36,23 @@ reproducibilidad (misma semilla, mismos datos) y menos pasos manuales entre la f
 | Generador sintético | Hecho, con el esquema real (`RSH_*`/`SIS_*`, separador `||`) y la base de inhumados |
 | DDL `ctl/param` + parámetros ilustrativos | **Aplicado en Fabric** (`lh_control`) |
 | Entorno (workspace `IMG_PoC`, 4 lakehouses, Environment `env_img`) | **Verificado**: `nb_env_check` 13 de 13 OK ([resultado](docs/ENV_CHECK.md)) |
-| Cuadernos `nb_env_check*` (3) | Escritos y **ejecutados en Fabric** |
-| Los otros 23 cuadernos (Etapas 1 a 3, controles, orquestadores) | Escritos y con sintaxis verificada; **aún no importados ni ejecutados en Fabric** |
+| Los 27 cuadernos (3 `nb_env_check*`, 23 de la cadena y `nb_measure`) | **Importados y ejecutados en Fabric** (como `.ipynb` generados con `scripts/notebook_tool.py`) |
 | Aprobación humana (G10) | **Verificada** con `pl_env_check_approval` (aprobada, rechazada y vencida); la actividad está en vista previa |
-| Pipeline `pl_img_cycle` con 4 aprobaciones | Planeado; guía en [`pipelines/README.md`](pipelines/README.md), falta generarlo |
+| Pipeline `pl_img_cycle` con 4 aprobaciones (plantilla `pipelines/templates/pl_img_cycle.template.json`, 26 actividades) | **Importado y ejecutado completo** en Fabric con las 4 aprobaciones (ciclo `2026-10g`: 1.905 s ≈ 31,8 min; 18 actividades ejecutadas, las 8 de rechazo/fallo no se activaron). Guía y lecciones en [`pipelines/README.md`](pipelines/README.md) |
+| Ciclos medidos con `nb_measure` | `2026-10a` (corte 1, cadena manual con orquestadores y aprobación manual con `nb_approve`), `2026-10b` (corte 2), `2026-10c` (corte 1) y `2026-10g` (corte 1, pipeline). Cadena de cuadernos: 291–356 s por ciclo (sin apertura ni publicación). Embudo del corte 1: Bronce 548 → Plata 507 (cuarentena 21, 20 duplicados) → universo 488 → 166 elegibles → 66 titulares/pagos (7.920.000); corte 2: universo 490, mismos 166/66. Errores 0 % contra `ground_truth`; cobertura de `execution_id` 100 % |
 | Capa de mapeo de nombres reales a internos (`img_lib.mapping`) y listados `.xlsx` (`img_lib.dispersal`) | Hecho, con pruebas locales; ver [`docs/DESIGN_DECISIONS.md`](docs/DESIGN_DECISIONS.md) |
 
 Desviaciones deliberadas respecto del documento (ver `docs/OPEN_ITEMS.md`): un solo workspace con 4 lakehouses,
 un cuaderno de Plata para ambas fuentes (la PoC tiene dos), publicación en OneLake en vez de Azure Storage.
 
 ## Qué falta
-1. Correr en Fabric la cadena con el esquema real: volver a subir datos y wheel, reaplicar el DDL de parámetros (ver `docs/ENV_CHECK.md`).
-2. Importar los 23 cuadernos a Fabric (lakehouse por defecto, Environment y celda de parámetros en cada uno).
-3. Generar `pl_img_cycle`; falta saber cómo espera Fabric los parámetros de la actividad de cuaderno.
-4. Tres corridas medidas de 500 registros (Experimento 2) y, opcional, una de 5.000.
-5. Línea base manual (G1) para medir la reducción de tiempo ≥30 %.
+1. Línea base manual (G1): se usa la estimación propia del equipo (≈120 h/ciclo), declarada como tal; no es una medición.
+2. G8 (plazo y canal de cada control) y G11 (costo operativo por ciclo); G6 sigue parcial (umbrales del MDM sin definir).
+3. Corrida a 10x (5.000 registros; datos en `output/data_5k`, carpeta `cutoff1_5k`): no ejecutada.
+4. Experimento 1: no ejecutado.
+5. Reducción de tiempo ≥30 %: sin línea base medida no se puede afirmar.
+6. El trial de Fabric vence ≈8 de diciembre de 2026 («Queda 64 días» el 5 de octubre).
+7. Automatizar la importación al portal (issue #8): sigue manual y falta un script de despliegue por API.
 
 Detalle y responsables: [`docs/OPEN_ITEMS.md`](docs/OPEN_ITEMS.md). Historial: [`docs/timeline.html`](docs/timeline.html).
 
@@ -77,11 +79,11 @@ subir se arma con `python scripts/prepare_package.py` (genera `output/fabric_pac
 4. Subir a `lh_control/Files/synthetic/landing/cutoff1/` los CSV del generador (`population.csv` = base maestra y
    `validation.csv` = inhumados, ambos separados por `||`); `ground_truth/` queda fuera del pipeline.
 5. Importar `nb_env_check` y sus dos hijos, y ejecutar `nb_env_check` (esperado: 13 OK).
-6. Importar los demás cuadernos de `notebooks/` (aún pendiente) y ejecutarlos en el orden de los orquestadores.
+6. Importar los demás cuadernos de `notebooks/` y ejecutarlos en el orden de los orquestadores, o importar `pl_img_cycle` (ver `pipelines/README.md`).
    `NOTEBOOK_VERSION` se reemplaza por el SHA/tag al preparar el paquete.
 
 ## Flujo de trabajo con Git
 - `main` protegida = lo que se importa al workspace. Trabajo en `feature/*`, `fix/*` o `docs/*`, PR a `main`,
   CI (ruff, pytest y build del wheel) en verde y merge con commit de merge. Commits en español con prefijo (`feat:`, `fix:`, `docs:`, `refactor:`).
-- Tags de hito previstos (aún no creados): `v0.1-etapa1`, `v0.2-e2e`, `v1.0-demo` (el release adjunta el `.whl` y el JSON del pipeline).
+- Tags de hito previstos (aún no creados, los decide el equipo): `v0.1-etapa1`, `v0.2-e2e`, `v1.0-demo` (el release adjunta el `.whl` y el JSON del pipeline).
 - Al cambiar el pipeline en el portal, traer el JSON con `scripts/pipeline_tool.py templatize` (ver `pipelines/INVENTORY.md`) y commitear la plantilla.

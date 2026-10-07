@@ -27,3 +27,6 @@ tenant*.json
 
 # IDs reales de tu entorno de Fabric (workspace, cuadernos, conexiones, correos): nunca al repo
 pipelines/local.json
+
+# JSON exportados de Fabric (contienen IDs de entorno)
+pipelines/exported/

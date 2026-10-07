@@ -60,6 +60,8 @@
 const REPO = "https://github.com/plazasgiovanny/img-poc-fabric";
 
 const EVENTS = [
+  { date:"2026-10-06", status:"done", title:"pl_img_cycle ejecutado completo en Fabric con 4 aprobaciones",
+    detail:"Ciclo 2026-10g: 1.905 s (≈31,8 min) de punta a punta; 18 de 26 actividades ejecutadas (las 8 de rechazo/fallo no se activaron). Los 27 cuadernos están importados y ejecutados. Ciclos medidos con nb_measure: 2026-10a, 10b, 10c y 10g; cadena de cuadernos de 291 a 356 s. Embudo del corte 1: 548 → 507 → 488 → 166 elegibles → 66 titulares (7.920.000); errores 0 % contra la verdad conocida. G2 a G5 y G7 cerrados, G6 parcial, G9 cerrado.", link:"../pipelines/README.md" },
   { date:"2026-10-03", status:"done", title:"PR #7 mergeado: G10 cerrado en la documentación",
     detail:"Resultados de las tres corridas de la aprobación y criterio para registrar al aprobador (aprobador designado y hora con utcNow()).", pr:7, commit:"a2bda0c" },
   { date:"2026-10-03", status:"done", title:"PR #6 mergeado: inventario de pipelines",
@@ -99,12 +101,13 @@ const EVENTS = [
 ];
 
 const NEXT_UP = [
-  { status:"doing", title:"Insumos de Jhon (G2 a G7)", detail:"Se le pidieron las 2 fuentes y su diccionario, focalización, 1 o 2 reglas de bloqueo con causal, regla de titular, estructura del listado y regla del MDM. Con ellos se reemplazan los parámetros ilustrativos y se construye la capa de mapeo de nombres reales a internos (aún no existe)." },
-  { status:"pending", title:"Importar los 23 cuadernos reales a Fabric", detail:"Solo nb_env_check* están importados. Duda abierta: si Fabric parte los .py en celdas por # %%; si no, generar .ipynb en el paquete. Cada cuaderno: lakehouse por defecto, Environment y celda de parámetros marcada." },
-  { status:"pending", title:"Generar pl_img_cycle", detail:"20 actividades, 4 controles y parámetros, con un script desde la definición del DAG. Falta saber cómo espera Fabric los parámetros de TridentNotebook (se necesita un JSON exportado con un cuaderno parametrizado).", link:"../pipelines/README.md" },
-  { status:"pending", title:"Automatizar la importación de pipelines", detail:"Crear o importar pipelines en Fabric por importación o API para reducir el factor humano." },
-  { status:"pending", title:"Línea base manual (G1)", detail:"Horas por ciclo del proceso manual, para medir la reducción de tiempo ≥30 %. Aún no se ha pedido." },
-  { status:"pending", title:"Corridas medidas del Experimento 2", detail:"3 corridas de 500 registros para la Tabla 4; opcional, 5.000 para el Experimento 3." },
+  { status:"doing", title:"G6: umbrales del MDM", detail:"G2 a G5 y G7 están cerrados con la información de Jhon; G6 sigue parcial (identidad por tipo y número; umbrales de coincidencia aproximada sin definir)." },
+  { status:"pending", title:"Línea base manual (G1)", detail:"Se usa la estimación propia del equipo (≈120 h/ciclo), declarada como tal; sin línea base medida no se puede afirmar la reducción de tiempo ≥30 %." },
+  { status:"pending", title:"G8 y G11", detail:"Plazo y canal de cada control; costo operativo por ciclo (Tabla 4)." },
+  { status:"pending", title:"Corrida a 10x y Experimento 1", detail:"5.000 registros (datos en output/data_5k, carpeta cutoff1_5k) y Experimento 1: no se han ejecutado." },
+  { status:"pending", title:"Automatizar la importación al portal (issue #8)", detail:"La fase 3 (cuadernos .ipynb) está cubierta con notebook_tool.py y pipeline_tool.py cubre render, templatize e ids-from-text; sigue manual la importación y falta un script de despliegue por API." },
+  { status:"pending", title:"Corregir requested_at en nb_record_approval", detail:"Copiar el requested_at de la fila PENDING a la fila APPROVED; ver lecciones en pipelines/README.md.", link:"../pipelines/README.md" },
+  { status:"pending", title:"Vencimiento del trial de Fabric", detail:"Vence ≈8 de diciembre de 2026 («Queda 64 días» el 5 de octubre)." },
   { status:"pending", title:"Actualizar el documento v2", detail:"§7, §13, §15, §16, §18, §19, §23, Tabla 4, Anexo A y ética. El .docx lo edita el equipo; aquí solo se redacta el borrador." },
 ];
 

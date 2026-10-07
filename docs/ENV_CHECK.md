@@ -93,8 +93,8 @@ cuaderno con `env_img`; si falla, agregar `openpyxl` en `env_img` > Public libra
    Se importan como `.ipynb` porque el importador de `.py` de Fabric ignora los `# %%` y deja todo en una sola celda;
    en el `.ipynb` la celda de parámetros ya va separada y etiquetada como *parameters* (`scripts/notebook_tool.py`).
    Si ya importaste los `.py`, bórralos y reimporta.
-   Hoy solo `nb_env_check`, `nb_env_check_child_a` y `nb_env_check_child_b` se han importado; los otros 23 no
-   (ver [`OPEN_ITEMS.md`](OPEN_ITEMS.md), pendiente de importación).
+   Los 27 cuadernos (los 3 `nb_env_check*`, los 23 de la cadena y `nb_measure`) ya se importaron y ejecutaron en Fabric
+   (6 de octubre de 2026). Al reimportar un cuaderno su ID cambia (ver [`pipelines/README.md`](../pipelines/README.md#lecciones-de-la-ejecución-en-fabric)).
 2. En **cada** cuaderno: lakehouse por defecto = `lh_control`; Environment = `env_img`; verificar que la primera celda
    lleve la etiqueta **Parameters** (viene puesta). Sin esto, los argumentos de `runMultiple` y del pipeline no sobrescriben las
    variables.
@@ -123,8 +123,7 @@ pipeline `pl_env_check_approval` ([`pipelines/INVENTORY.md`](../pipelines/INVENT
 | 12 | DDL de control aplicado | Las tablas `ctl.*` y `param.*` existen en `lh_control` |
 | 13 | `runMultiple` con DAG | Un DAG de dos cuadernos con dependencia se valida y se ejecuta |
 
-Lo que **no** cubre esta verificación: ninguno de los 23 cuadernos reales se ha ejecutado en Fabric, ni el rendimiento
-con 500 registros. La premisa de que solo el usuario designado puede aprobar tampoco se probó.
+Lo que **no** cubre esta verificación (del 3 de octubre): los cuadernos reales ni el rendimiento con 500 registros; eso se midió después con `nb_measure` (ciclos `2026-10a`, `b`, `c` y `g`). La premisa de que solo el usuario designado puede aprobar sigue sin probarse.
 
 ## Errores que aparecieron y qué los causó
 

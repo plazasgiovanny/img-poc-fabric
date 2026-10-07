@@ -31,4 +31,4 @@ G2 a G7 son los 7 insumos que se le pidieron a Jhon (G2 incluye las dos fuentes 
 | Verificar la premisa de aprobación | Que otro miembro del chat no pueda aprobar al abrir el enlace | No verificado |
 | Alinear `nb_record_approval` con la decisión de G10 | `decided_at` ya es parámetro (el pipeline pasa `utcNow()`). Brecha conocida: el cuaderno escribe `requested_at` con su propia hora en las filas APPROVED (posterior a `decided_at`); el tiempo de revisión se calcula como `decided_at`(APPROVED) − `requested_at`(PENDING). Falta copiar el `requested_at` de la fila PENDING | Abierto (corrección pendiente) |
 | Vencimiento del trial de Fabric | Vence ≈8 de diciembre de 2026 («Queda 64 días» el 5 de octubre) | Abierto; fecha límite para las corridas pendientes |
-| Corrida a 10x y Experimento 1 | 5.000 registros (datos en `output/data_5k`, carpeta `cutoff1_5k`) y Experimento 1 no ejecutados | Abierto |
+| Experimento 1 | No ejecutado. La corrida a 10x (≈5.000 personas) sí se ejecutó: ciclo `2026-10k`, 2.033 s ≈ 33,9 min | Abierto (Experimento 1) |

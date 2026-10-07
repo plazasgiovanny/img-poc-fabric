@@ -56,7 +56,7 @@ La plantilla generada (`templates/pl_img_cycle.template.json`) tiene 26 activida
 **Formato de parámetros de `TridentNotebook`** (tomado de un JSON exportado): en `typeProperties.parameters`,
 `{"cycle_id": {"value": {"value": "@pipeline().parameters.cycle_id", "type": "Expression"}, "type": "string"}}`; un literal va como `{"value": "C1", "type": "string"}`.
 
-**Verificado en Fabric (ejecución de `2026-10g`):** el formato de parámetros de `TridentNotebook`, `runMultiple` dentro de un pipeline, las expresiones dinámicas (`@pipeline().parameters`, `RunId`, `utcNow()`) y la actividad Approval con sus 4 controles. De las 26 actividades se ejecutaron 18; las 8 de rechazo/fallo (`reject_cX`, `fail_cX`) no se activaron.
+**Verificado en Fabric (ejecuciones `2026-10g` y `2026-10k`, y rechazo en `2026-10m`):** el formato de parámetros de `TridentNotebook`, `runMultiple` dentro de un pipeline, las expresiones dinámicas (`@pipeline().parameters`, `RunId`, `utcNow()`) y la actividad Approval con sus 4 controles. De las 26 actividades se ejecutaron 18; las 8 de rechazo/fallo (`reject_cX`, `fail_cX`) no se activaron.
 
 **Sigue sin verificar:** la ruta de rechazo o vencimiento dentro de `pl_img_cycle` (solo se probó en `pl_env_check_approval`), la premisa de que solo el aprobador designado puede aprobar, `ActionTimedOut` dentro de `string(error)` y la combinación de flechas.
 

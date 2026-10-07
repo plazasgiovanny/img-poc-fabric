@@ -2,7 +2,7 @@
 
 > Inventario de pipelines, plantillas JSON sin IDs y la herramienta para generarlos: [`INVENTORY.md`](INVENTORY.md).
 
-El pipeline se versiona como plantilla JSON sin IDs (`templates/pl_img_cycle.template.json`) y se genera con `scripts/pipeline_tool.py` (ver [`INVENTORY.md`](INVENTORY.md)). **`pl_img_cycle` está importado y se ejecutó completo en Fabric** (6 de octubre de 2026, ciclo `2026-10g`, con las 4 aprobaciones, 1.905 s ≈ 31,8 min). Esta guía fija su estructura (§18.3 y §19).
+El pipeline se versiona como plantilla JSON sin IDs (`templates/pl_img_cycle.template.json`) y se genera con `scripts/pipeline_tool.py` (ver [`INVENTORY.md`](INVENTORY.md)). **`pl_img_cycle` está importado y se ejecutó completo en Fabric** (6 de octubre de 2026, ciclo `2026-10g`, con las 4 aprobaciones, 1.905 s ≈ 31,8 min, y ciclo `2026-10k` (10x), 2.033 s ≈ 33,9 min). Esta guía fija su estructura (§18.3 y §19).
 
 **Parámetros del pipeline:** `cycle_id`, `cutoff` (`cutoff1` o `cutoff2`), `cutoff_date`. Usar un `cycle_id`
 nuevo por corrida (p. ej. `2026-09-r1`): repetirlo duplica filas.
@@ -56,9 +56,9 @@ La plantilla generada (`templates/pl_img_cycle.template.json`) tiene 26 activida
 **Formato de parámetros de `TridentNotebook`** (tomado de un JSON exportado): en `typeProperties.parameters`,
 `{"cycle_id": {"value": {"value": "@pipeline().parameters.cycle_id", "type": "Expression"}, "type": "string"}}`; un literal va como `{"value": "C1", "type": "string"}`.
 
-**Verificado en Fabric (ejecuciones `2026-10g` y `2026-10k`, y rechazo en `2026-10m`):** el formato de parámetros de `TridentNotebook`, `runMultiple` dentro de un pipeline, las expresiones dinámicas (`@pipeline().parameters`, `RunId`, `utcNow()`) y la actividad Approval con sus 4 controles. De las 26 actividades se ejecutaron 18; las 8 de rechazo/fallo (`reject_cX`, `fail_cX`) no se activaron.
+**Verificado en Fabric (ejecuciones `2026-10g` y `2026-10k`, y rechazo en `2026-10m`):** el formato de parámetros de `TridentNotebook`, `runMultiple` dentro de un pipeline, las expresiones dinámicas (`@pipeline().parameters`, `RunId`, `utcNow()`) y la actividad Approval con sus 4 controles. En `2026-10g` y `2026-10k` corrieron 18 de las 26 actividades (las 8 de rechazo/fallo no se activaron); en `2026-10m`, el rechazo en C1 activó `reject_c1` y `fail_c1`, y no se ejecutaron `orch_e2` ni `publish`.
 
-**Sigue sin verificar:** la ruta de rechazo o vencimiento dentro de `pl_img_cycle` (solo se probó en `pl_env_check_approval`), la premisa de que solo el aprobador designado puede aprobar, `ActionTimedOut` dentro de `string(error)` y la combinación de flechas.
+**Sigue sin verificar:** el vencimiento dentro de `pl_img_cycle` (solo se probó en `pl_env_check_approval`; el rechazo sí se probó en `2026-10m`), la premisa de que solo el aprobador designado puede aprobar, `ActionTimedOut` dentro de `string(error)` y la combinación de flechas.
 
 ## Obtener los IDs de cuaderno e importar `pl_img_cycle`
 1. En un cuaderno de Fabric: `for n in notebookutils.notebook.list(): print(n.displayName, n.id)` (si el atributo falla, `print(n)` y ajusta el texto a líneas «nombre id»). Copia la salida a un archivo local (p. ej. `ids.txt`, no se versiona).
